@@ -11,6 +11,7 @@ void IMU::initialize(void (*func)())
   mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);
   mpu_set_sample_rate(100);
   mpu_set_accel_fsr(8);
+  Serial.println("Initialize");
 
   if (dmp_load_motion_driver_firmware() == 0)
   {
@@ -20,12 +21,14 @@ void IMU::initialize(void (*func)())
     mpu_set_dmp_state(1);
     attachInterrupt(0, func, RISING);
     mpu_get_int_status(&mpuIntStatus);
+    Serial.println("DMP On");
   }
 }
 
 void IMU::interrupt()
 {
   mpuInterrupt = true;
+  Serial.println("Interrupt");
 }
 
 void IMU::update()

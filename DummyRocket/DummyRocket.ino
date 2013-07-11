@@ -116,5 +116,6 @@ void loop()
   Serial.print(" ");
   Serial.print(imu.gyro[0]);
   Serial.print(" ");
-  Serial.println(imu.timestamp);
+  Serial.print(imu.timestamp);
+  Serial.print("\n");
 }
