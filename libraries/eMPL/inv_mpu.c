@@ -107,8 +107,16 @@ static inline int reg_int_cb(struct int_param_s *int_param)
  */
 #elif defined ARDUINO
 #include "wrapper.h"
-#define i2c_write   I2Cdev_write
-#define i2c_read    I2Cdev_read
+static inline char i2c_write(unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char *data)
+{
+  I2CdevWrapper *v = I2Cdev_create();
+  return I2Cdev_write(v, slave_addr, reg_addr, length, data);
+}
+static inline char i2c_read(unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char *data)
+{
+  I2CdevWrapper *v = I2Cdev_create();
+  return I2Cdev_read(v, slave_addr, reg_addr, length, data);
+}
 #define delay_ms    delay
 static inline void get_ms(unsigned long *count)
 {
@@ -116,6 +124,9 @@ static inline void get_ms(unsigned long *count)
 }
 #define labs        abs
 #define fabsf       abs
+#define log_i(...)     do {} while (0)
+#define log_e(...)     do {} while (0)
+#define min(a,b) ((a<b)?a:b)
 #define MPU6050
 
 #else
