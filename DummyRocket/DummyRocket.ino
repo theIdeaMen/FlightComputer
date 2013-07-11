@@ -3,7 +3,8 @@
 
 #include <PESO_Timer.h>
 
-#include <MPU6050_20.h>
+#include <inv_mpu.h>
+#include <inv_mpu_dmp_motion_driver.h>
 #include <PESO_IMU.h>
 
 #include <SdFat.h>
@@ -21,6 +22,7 @@ Timer timer(70);
 
 IMU imu;
 void imuInterrupt() { imu.interrupt(); } // IMU interrupt
+
 
 GPS gps;
 SIGNAL(TIMER0_COMPA_vect) { char c = gps.data.read(); } // GPS interrupt
@@ -56,9 +58,9 @@ void setup()
   
   gps.initialize();
   
-  logger.append << "timestamp,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
-  logger.echo();
-  logger.recordln();
+  //logger.append << "timestamp,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
+  //logger.echo();
+  //logger.recordln();
   
   cutter.initialize(TRIGGER_PIN, 20000, Trigger::ABOVE, 25000, Trigger::ABOVE);
   cutter.onCallBack(&cutCallBack);
@@ -76,7 +78,7 @@ void loop()
   if (!timer.ready()) return;
   
   //cutter.update(millis());
-  
+/*  
   // Append time since last update
   logger.append << imu.timestamp << ",";
   
@@ -107,5 +109,12 @@ void loop()
   
   logger.echo();
   logger.recordln();
-  
+*/  
+  Serial.print(imu.q[0]);
+  Serial.print(" ");
+  Serial.print(imu.aa[0]);
+  Serial.print(" ");
+  Serial.print(imu.gyro[0]);
+  Serial.print(" ");
+  Serial.println(imu.timestamp);
 }

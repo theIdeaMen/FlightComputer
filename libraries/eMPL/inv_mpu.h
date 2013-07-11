@@ -17,9 +17,12 @@
  *                  MPU9150 (or MPU6050 w/ AK8975 on the auxiliary bus)
  *                  MPU9250 (or MPU6500 w/ AK8963 on the auxiliary bus)
  */
-
 #ifndef _INV_MPU_H_
 #define _INV_MPU_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define INV_X_GYRO      (0x40)
 #define INV_Y_GYRO      (0x20)
@@ -57,7 +60,8 @@ struct int_param_s {
 #define MPU_INT_STATUS_DMP_5            (0x2000)
 
 /* Set up APIs */
-int mpu_init(struct int_param_s *int_param);
+//int mpu_init(struct int_param_s *int_param);
+int mpu_init();
 int mpu_init_slave(void);
 int mpu_set_bypass(unsigned char bypass_on);
 
@@ -122,6 +126,10 @@ int mpu_reg_dump(void);
 int mpu_read_reg(unsigned char reg, unsigned char *data);
 int mpu_run_self_test(long *gyro, long *accel);
 int mpu_register_tap_cb(void (*func)(unsigned char, unsigned char));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* #ifndef _INV_MPU_H_ */
 

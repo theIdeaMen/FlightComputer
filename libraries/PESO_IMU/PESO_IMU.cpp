@@ -2,7 +2,6 @@
 
 IMU::IMU()
 {
-  packetSize = 0;
   mpuInterrupt = false;
 }
 

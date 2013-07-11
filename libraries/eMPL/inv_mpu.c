@@ -101,6 +101,23 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 /* UC3 is a 32-bit processor, so abs and labs are equivalent. */
 #define labs        abs
 #define fabs(x)     (((x)>0)?(x):-(x))
+
+/*
+ * Arduino specific functions
+ */
+#elif defined ARDUINO
+#include "wrapper.h"
+#define i2c_write   I2Cdev_write
+#define i2c_read    I2Cdev_read
+#define delay_ms    delay
+static inline void get_ms(unsigned long *count)
+{
+  count[0] = millis();
+}
+#define labs        abs
+#define fabsf       abs
+#define MPU6050
+
 #else
 #error  Gyro driver is missing the system layer implementations.
 #endif
@@ -688,7 +705,8 @@ int mpu_read_reg(unsigned char reg, unsigned char *data)
  *  @param[in]  int_param   Platform-specific parameters to interrupt API.
  *  @return     0 if successful.
  */
-int mpu_init(struct int_param_s *int_param)
+//int mpu_init(struct int_param_s *int_param)
+int mpu_init()
 {
     unsigned char data[6], rev;
 
@@ -787,8 +805,8 @@ int mpu_init(struct int_param_s *int_param)
     if (mpu_configure_fifo(0))
         return -1;
 
-    if (int_param)
-        reg_int_cb(int_param);
+//    if (int_param)
+//        reg_int_cb(int_param);
 
 #ifdef AK89xx_SECONDARY
     setup_compass();

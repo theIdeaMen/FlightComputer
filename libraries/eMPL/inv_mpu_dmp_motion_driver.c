@@ -62,6 +62,19 @@
 #define log_i       MPL_LOGI
 #define log_e       MPL_LOGE
 
+/*
+ * Arduino specific functions
+ */
+#elif defined ARDUINO
+
+#define delay_ms    delay
+static inline void get_ms(unsigned long *count)
+{
+  count[0] = millis();
+}
+
+#define MPU6050
+
 #else
 #error  Gyro driver is missing the system layer implementations.
 #endif
