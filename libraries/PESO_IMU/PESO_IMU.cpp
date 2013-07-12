@@ -16,6 +16,8 @@ int IMU::initialize(void (*func)())
   if (mpu_set_accel_fsr(8))
     return -4;
 
+
+
   if (dmp_load_motion_driver_firmware())
     return -5;
   else
