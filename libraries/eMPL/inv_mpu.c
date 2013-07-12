@@ -117,10 +117,13 @@ static inline char i2c_read(unsigned char slave_addr, unsigned char reg_addr, un
   I2CdevWrapper *v = I2Cdev_create();
   return I2Cdev_read(v, slave_addr, reg_addr, length, data);
 }
-#define delay_ms    delay
+static inline void delay_ms(unsigned long t)
+{
+  delay(t);
+}
 static inline void get_ms(unsigned long *count)
 {
-  count[0] = millis();
+  count = millis();
 }
 #define labs        abs
 #define fabsf       abs
@@ -730,12 +733,12 @@ int mpu_init()
     /* Wake up chip. */
     data[0] = 0x00;
     if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data))
-        return -1;
+        return -2;
 
 #if defined MPU6050
     /* Check product revision. */
     if (i2c_read(st.hw->addr, st.reg->accel_offs, 6, data))
-        return -1;
+        return -3;
     rev = ((data[5] & 0x01) << 2) | ((data[3] & 0x01) << 1) |
         (data[1] & 0x01);
 
@@ -747,16 +750,16 @@ int mpu_init()
             st.chip_cfg.accel_half = 0;
         else {
             log_e("Unsupported software product rev %d.\n", rev);
-            return -1;
+            return -4;
         }
     } else {
         if (i2c_read(st.hw->addr, st.reg->prod_id, 1, data))
-            return -1;
+            return -5;
         rev = data[0] & 0x0F;
         if (!rev) {
             log_e("Product ID read as 0 indicates device is either "
                 "incompatible or an MPU3050.\n");
-            return -1;
+            return -6;
         } else if (rev == 4) {
             log_i("Half sensitivity part found.\n");
             st.chip_cfg.accel_half = 1;
@@ -766,12 +769,12 @@ int mpu_init()
 #elif defined MPU6500
 #define MPU6500_MEM_REV_ADDR    (0x17)
     if (mpu_read_mem(MPU6500_MEM_REV_ADDR, 1, &rev))
-        return -1;
+        return -7;
     if (rev == 0x1)
         st.chip_cfg.accel_half = 0;
     else {
         log_e("Unsupported software product rev %d.\n", rev);
-        return -1;
+        return -8;
     }
 
     /* MPU6500 shares 4kB of memory between the DMP and the FIFO. Since the
@@ -779,7 +782,7 @@ int mpu_init()
      */
     data[0] = BIT_FIFO_SIZE_1024 | 0x8;
     if (i2c_write(st.hw->addr, st.reg->accel_cfg2, 1, data))
-        return -1;
+        return -9;
 #endif
 
     /* Set to invalid values to ensure no I2C writes are skipped. */
@@ -806,15 +809,15 @@ int mpu_init()
     st.chip_cfg.dmp_sample_rate = 0;
 
     if (mpu_set_gyro_fsr(2000))
-        return -1;
+        return -10;
     if (mpu_set_accel_fsr(2))
-        return -1;
+        return -11;
     if (mpu_set_lpf(42))
-        return -1;
+        return -12;
     if (mpu_set_sample_rate(50))
-        return -1;
+        return -13;
     if (mpu_configure_fifo(0))
-        return -1;
+        return -14;
 
 //    if (int_param)
 //        reg_int_cb(int_param);
@@ -822,11 +825,11 @@ int mpu_init()
 #ifdef AK89xx_SECONDARY
     setup_compass();
     if (mpu_set_compass_sample_rate(10))
-        return -1;
+        return -15;
 #else
     /* Already disabled by setup_compass. */
     if (mpu_set_bypass(0))
-        return -1;
+        return -16;
 #endif
 
     mpu_set_sensors(0);
@@ -2347,18 +2350,18 @@ int mpu_set_dmp_state(unsigned char enable)
         if (!st.chip_cfg.dmp_loaded)
             return -1;
         /* Disable data ready interrupt. */
-        set_int_enable(0);
+        set_int_enable(0); //2
         /* Disable bypass mode. */
-        mpu_set_bypass(0);
+        mpu_set_bypass(0);  //2
         /* Keep constant sample rate, FIFO rate controlled by DMP. */
-        mpu_set_sample_rate(st.chip_cfg.dmp_sample_rate);
+        mpu_set_sample_rate(st.chip_cfg.dmp_sample_rate);  //1
         /* Remove FIFO elements. */
         tmp = 0;
-        i2c_write(st.hw->addr, 0x23, 1, &tmp);
+        i2c_write(st.hw->addr, 0x23, 1, &tmp);  //1
         st.chip_cfg.dmp_on = 1;
         /* Enable DMP interrupt. */
-        set_int_enable(1);
-        mpu_reset_fifo();
+        set_int_enable(1);  //2
+        mpu_reset_fifo();  //7
     } else {
         /* Disable DMP interrupt. */
         set_int_enable(0);

@@ -109,7 +109,7 @@ void loop()
   
   logger.echo();
   logger.recordln();
-*/  
+  */
   Serial.print(imu.q[0]);
   Serial.print(" ");
   Serial.print(imu.aa[0]);
@@ -118,4 +118,5 @@ void loop()
   Serial.print(" ");
   Serial.print(imu.timestamp);
   Serial.print("\n");
+  
 }

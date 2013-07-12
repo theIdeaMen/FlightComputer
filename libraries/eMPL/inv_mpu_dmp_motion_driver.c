@@ -66,11 +66,24 @@
  * Arduino specific functions
  */
 #elif defined ARDUINO
-
-#define delay_ms    delay
-static inline void get_ms(unsigned long *count)
+#include "wrapper.h"
+static inline char i2c_write(unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char *data)
 {
-  count[0] = millis();
+  I2CdevWrapper *v = I2Cdev_create();
+  return I2Cdev_write(v, slave_addr, reg_addr, length, data);
+}
+static inline char i2c_read(unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char *data)
+{
+  I2CdevWrapper *v = I2Cdev_create();
+  return I2Cdev_read(v, slave_addr, reg_addr, length, data);
+}
+static inline void delay_ms(unsigned long t)
+{
+  delay(t);
+}
+static void get_ms(unsigned long *count)
+{
+  count = millis();
 }
 
 #define MPU6050

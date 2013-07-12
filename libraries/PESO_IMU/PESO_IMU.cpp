@@ -38,23 +38,23 @@ void IMU::initialize(void (*func)())
 void IMU::interrupt()
 {
   mpuInterrupt = true;
-  Serial.println("Interrupt");
 }
 
 void IMU::update()
 {
   if (!mpuInterrupt) return;
-  
+
   mpuInterrupt = false;
   mpu_get_int_status(&mpuIntStatus);
-  
+
   if ((mpuIntStatus & 0x10))
   {
+    Serial.println("fifo reset");
     mpu_reset_fifo();
     return;
   }
   
   if (!(mpuIntStatus & 0x01)) return;
-  
+
   dmp_read_fifo(gyro, aa, q, &timestamp, &sensors, &more);
 }
