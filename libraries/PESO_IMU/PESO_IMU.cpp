@@ -57,4 +57,5 @@ void IMU::update()
   if (!(mpuIntStatus & 0x01)) return;
 
   dmp_read_fifo(gyro, aa, q, &timestamp, &sensors, &more);
+  timestamp = millis();
 }

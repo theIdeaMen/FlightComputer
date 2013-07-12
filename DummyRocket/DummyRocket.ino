@@ -112,11 +112,11 @@ void loop()
   */
   Serial.print(imu.q[0]);
   Serial.print(" ");
-  Serial.print(imu.aa[0]);
+  Serial.print(imu.q[1]);
   Serial.print(" ");
-  Serial.print(imu.gyro[0]);
+  Serial.print(imu.q[2]);
   Serial.print(" ");
-  Serial.print(imu.timestamp);
+  Serial.print(imu.q[3]);
   Serial.print("\n");
   
 }

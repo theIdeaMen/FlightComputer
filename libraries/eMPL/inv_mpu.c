@@ -123,7 +123,7 @@ static inline void delay_ms(unsigned long t)
 }
 static inline void get_ms(unsigned long *count)
 {
-  count = millis();
+  count = 0;
 }
 #define labs        abs
 #define fabsf       abs

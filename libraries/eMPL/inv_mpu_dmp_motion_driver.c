@@ -81,9 +81,9 @@ static inline void delay_ms(unsigned long t)
 {
   delay(t);
 }
-static void get_ms(unsigned long *count)
+static inline void get_ms(unsigned long *count)
 {
-  count = millis();
+  count = 0;
 }
 
 #define MPU6050
