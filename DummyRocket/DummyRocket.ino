@@ -52,20 +52,20 @@ void setup()
   
   Wire.begin();
   
-  imu.initialize(imuInterrupt);
+  while(imu.initialize(imuInterrupt))
+    delay(100);
   
   logger.initialize(3, false); // Chip Select Pin 3, Full Speed
   
   gps.initialize();
   
-  //logger.append << "timestamp,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
-  //logger.echo();
-  //logger.recordln();
+  logger.append << "timestamp,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
+  logger.echo();
+  logger.recordln();
   
   cutter.initialize(TRIGGER_PIN, 20000, Trigger::ABOVE, 25000, Trigger::ABOVE);
   cutter.onCallBack(&cutCallBack);
   cutter.offCallBack(&stopCallBack);
-
 }
 
 void loop()
@@ -78,7 +78,7 @@ void loop()
   if (!timer.ready()) return;
   
   //cutter.update(millis());
-/*  
+
   // Append time since last update
   logger.append << imu.timestamp << ",";
   
@@ -109,14 +109,5 @@ void loop()
   
   logger.echo();
   logger.recordln();
-  */
-  Serial.print(imu.q[0]);
-  Serial.print(" ");
-  Serial.print(imu.q[1]);
-  Serial.print(" ");
-  Serial.print(imu.q[2]);
-  Serial.print(" ");
-  Serial.print(imu.q[3]);
-  Serial.print("\n");
   
 }
