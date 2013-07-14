@@ -11,13 +11,17 @@ class IMU
   
   short mpuIntStatus;   // holds actual interrupt status byte from MPU
   
-  long q[4];           // [w, x, y, z]         quaternion container
+  long  q[4];          // [w, x, y, z]         quaternion container
   short gyro[3];       // [x, y, z]            accel sensor measurements
   short aa[3];         // [x, y, z]            accel sensor measurements
+  
+  float gyro_sens;
+  unsigned short aa_sens;
   
   short sensors;
   unsigned char more;
   unsigned long timestamp;
+  long temperature;
   
   volatile bool mpuInterrupt;     // indicates whether MPU interrupt pin has gone high
   

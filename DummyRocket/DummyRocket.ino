@@ -18,7 +18,7 @@
 #define TRIGGER_PIN 5
 
 Logger logger;
-Timer timer(70);
+Timer timer(2);
 
 IMU imu;
 void imuInterrupt() { imu.interrupt(); } // IMU interrupt
@@ -59,7 +59,7 @@ void setup()
   
   gps.initialize();
   
-  logger.append << "timestamp,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
+  logger.append << "timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
   logger.echo();
   logger.recordln();
   
@@ -82,10 +82,13 @@ void loop()
   // Append time since last update
   logger.append << imu.timestamp << ",";
   
+  // Append temperature
+  logger.append << imu.temperature << ",";
+  
   // Append IMU data
   logger.append << imu.q[0] << "," << imu.q[1] << "," << imu.q[2] << "," << imu.q[3] << ",";
-  logger.append << imu.aa[0] << "," << imu.aa[1] << "," << imu.aa[2] << ",";
-  logger.append << imu.gyro[0] << "," << imu.gyro[1] << "," << imu.gyro[2] << ",";
+  logger.append << (imu.aa[0]/(float)imu.aa_sens) << "," << (imu.aa[1]/(float)imu.aa_sens) << "," << (imu.aa[2]/(float)imu.aa_sens) << ",";
+  logger.append << (imu.gyro[0]/imu.gyro_sens) << "," << (imu.gyro[1]/imu.gyro_sens) << "," << (imu.gyro[2]/imu.gyro_sens) << ",";
 
   // Append GPS data
   if (gps.hour < 10) logger.append << 0;

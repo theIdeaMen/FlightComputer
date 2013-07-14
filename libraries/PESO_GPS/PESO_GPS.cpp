@@ -13,8 +13,8 @@ GPS::GPS()
   lat = '0';
   longitude = 0;
   lon = '0';
-  speed = -1;
-  altitude = -1;
+  speed = 0;
+  altitude = 0;
 }
 
 void GPS::initialize()
@@ -24,7 +24,7 @@ void GPS::initialize()
   data.begin(9600);
   
   data.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  data.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  data.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);
   
   // useInterrupt(true);
   OCR0A = 0xAF;

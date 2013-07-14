@@ -15,24 +15,26 @@ int IMU::initialize(void (*func)())
     return -3;
   if (mpu_set_accel_fsr(8))
     return -4;
-
-
+  if (mpu_get_gyro_sens(&gyro_sens))
+    return -5;
+  if (mpu_get_accel_sens(&aa_sens))
+    return -6;
 
   if (dmp_load_motion_driver_firmware())
-    return -5;
+    return -7;
   else
   {
     //dmp_set_orientation(inv_orientation_matrix_to_scalar(gyro_orientation));
     
     if (dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL))
-      return -6;
-    if (dmp_set_fifo_rate(100))
-      return -7;
-    if (mpu_set_dmp_state(1))
       return -8;
+    if (dmp_set_fifo_rate(100))
+      return -9;
+    if (mpu_set_dmp_state(1))
+      return -10;
     attachInterrupt(0, func, RISING);
     if (mpu_get_int_status(&mpuIntStatus))
-      return -9;
+      return -11;
     Serial.println("DMP On");
   }
 
@@ -61,5 +63,6 @@ void IMU::update()
   if (!(mpuIntStatus & 0x01)) return;
 
   dmp_read_fifo(gyro, aa, q, &timestamp, &sensors, &more);
+  mpu_get_temperature(&temperature, &timestamp);
   timestamp = millis();
 }
