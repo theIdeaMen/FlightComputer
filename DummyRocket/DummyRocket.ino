@@ -16,9 +16,10 @@
 
 #include <PESO_Trigger.h>
 #define TRIGGER_PIN 5
+#define SAMPLE_RATE 70
 
 Logger logger;
-Timer timer(70);
+Timer timer(SAMPLE_RATE);
 
 IMU imu;
 void imuInterrupt() { imu.interrupt(); } // IMU interrupt
@@ -28,7 +29,6 @@ GPS gps;
 SIGNAL(TIMER0_COMPA_vect) { char c = gps.data.read(); } // GPS interrupt
 
 Trigger cutter;
-#define TRIGGER_PIN 5
 
 void cutCallBack()
 {
@@ -52,7 +52,7 @@ void setup()
   
   Wire.begin();
   
-  while(imu.initialize(imuInterrupt))
+  while(imu.initialize(imuInterrupt, SAMPLE_RATE))
     delay(100);
   
   logger.initialize(3, false); // Chip Select Pin 3, Full Speed

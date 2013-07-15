@@ -26,7 +26,7 @@ class IMU
   volatile bool mpuInterrupt;     // indicates whether MPU interrupt pin has gone high
   
   IMU();
-  int initialize(void (*func)());
+  int initialize(void (*func)(), unsigned short rate);
   void interrupt();
   void update();
   

@@ -5,13 +5,13 @@ IMU::IMU()
   mpuInterrupt = false;
 }
 
-int IMU::initialize(void (*func)())
+int IMU::initialize(void (*func)(), unsigned short rate)
 {
   if (mpu_init())
     return -1;
   if (mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL))
     return -2;
-  if (mpu_set_sample_rate(70))
+  if (mpu_set_sample_rate(rate))
     return -3;
   if (mpu_set_accel_fsr(8))
     return -4;
@@ -28,7 +28,7 @@ int IMU::initialize(void (*func)())
     
     if (dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL))
       return -8;
-    if (dmp_set_fifo_rate(100))
+    if (dmp_set_fifo_rate(rate))
       return -9;
     if (mpu_set_dmp_state(1))
       return -10;
