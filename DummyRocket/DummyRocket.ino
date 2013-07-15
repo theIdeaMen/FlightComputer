@@ -59,7 +59,7 @@ void setup()
   
   gps.initialize();
   
-  logger.append << setprecision(6) << "timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
+  logger.append << setprecision(9) << "timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
   logger.echo();
   logger.recordln();
   
@@ -83,10 +83,10 @@ void loop()
   logger.append << imu.timestamp << ",";
   
   // Append temperature
-  logger.append << imu.temperature << ",";
+  logger.append << (imu.temperature/(float)65536) << ",";
   
   // Append IMU data
-  logger.append << imu.q[0] << "," << imu.q[1] << "," << imu.q[2] << "," << imu.q[3] << ",";
+  logger.append << (imu.q[0]/(float)1073741824) << "," << (imu.q[1]/(float)1073741824) << "," << (imu.q[2]/(float)1073741824) << "," << (imu.q[3]/(float)1073741824) << ",";
   logger.append << (imu.aa[0]/(float)imu.aa_sens) << "," << (imu.aa[1]/(float)imu.aa_sens) << "," << (imu.aa[2]/(float)imu.aa_sens) << ",";
   logger.append << (imu.gyro[0]/imu.gyro_sens) << "," << (imu.gyro[1]/imu.gyro_sens) << "," << (imu.gyro[2]/imu.gyro_sens) << ",";
 
