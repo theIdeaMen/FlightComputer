@@ -44,6 +44,9 @@ int IMU::initialize(void (*func)(), unsigned short rate)
 void IMU::interrupt()
 {
   mpuInterrupt = true;
+  dmp_read_fifo(gyro, aa, q, &timestamp, &sensors, &more);
+  mpu_get_temperature(&temperature, &timestamp);
+  timestamp = millis();
 }
 
 void IMU::update()
@@ -59,10 +62,4 @@ void IMU::update()
     mpu_reset_fifo();
     return;
   }
-  
-  if (!(mpuIntStatus & 0x01)) return;
-
-  dmp_read_fifo(gyro, aa, q, &timestamp, &sensors, &more);
-  mpu_get_temperature(&temperature, &timestamp);
-  timestamp = millis();
 }

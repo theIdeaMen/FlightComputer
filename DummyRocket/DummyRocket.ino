@@ -16,7 +16,7 @@
 
 #include <PESO_Trigger.h>
 #define TRIGGER_PIN 5
-#define SAMPLE_RATE 70
+#define SAMPLE_RATE 70      // Must be between 4 and 200 Hz
 
 Logger logger;
 Timer timer(SAMPLE_RATE);
