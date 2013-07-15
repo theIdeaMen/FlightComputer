@@ -11,7 +11,7 @@ int IMU::initialize(void (*func)())
     return -1;
   if (mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL))
     return -2;
-  if (mpu_set_sample_rate(100))
+  if (mpu_set_sample_rate(70))
     return -3;
   if (mpu_set_accel_fsr(8))
     return -4;

@@ -18,7 +18,7 @@
 #define TRIGGER_PIN 5
 
 Logger logger;
-Timer timer(2);
+Timer timer(70);
 
 IMU imu;
 void imuInterrupt() { imu.interrupt(); } // IMU interrupt
@@ -59,7 +59,7 @@ void setup()
   
   gps.initialize();
   
-  logger.append << "timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
+  logger.append << setprecision(6) << "timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
   logger.echo();
   logger.recordln();
   
@@ -108,7 +108,7 @@ void loop()
   logger.append << gps.latitude << gps.lat << ",";
   logger.append << gps.longitude << gps.lon << ",";
   logger.append << gps.speed << ",";
-  logger.append << gps.altitude << ",";
+  logger.append << gps.altitude;
   
   logger.echo();
   logger.recordln();
