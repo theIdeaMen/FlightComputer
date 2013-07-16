@@ -11,7 +11,7 @@ class Logger
     ofstream logfile;
   
     char name[10];
-    char buf[180];
+    char buf[256];
   
   public:
     obufstream append;

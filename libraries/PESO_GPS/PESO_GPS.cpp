@@ -2,19 +2,19 @@
 
 GPS::GPS()
 {
-  hour = 0;
-  minute = 0;
-  seconds = 0;
-  milliseconds = 0;
-  day = 0;
-  month = 0;
-  year = 0;
-  latitude = 0;
-  lat = '0';
-  longitude = 0;
-  lon = '0';
-  speed = 0;
-  altitude = 0;
+  hour = 1;
+  minute = 1;
+  seconds = 1;
+  milliseconds = 1;
+  day = 1;
+  month = 1;
+  year = 1;
+  latitude = 1;
+  lat = '1';
+  longitude = 1;
+  lon = '1';
+  speed = 1;
+  altitude = 1;
 }
 
 void GPS::initialize()
