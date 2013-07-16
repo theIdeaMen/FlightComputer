@@ -16,7 +16,7 @@
 
 #include <PESO_Trigger.h>
 #define TRIGGER_PIN 5
-#define SAMPLE_RATE 70      // Must be between 4 and 200 Hz
+#define SAMPLE_RATE 35      // Must be between 4 and 35 Hz
 
 Logger logger;
 Timer timer(SAMPLE_RATE);
@@ -110,7 +110,7 @@ void loop()
   logger.append << gps.speed << ",";
   logger.append << gps.altitude;
   
-  logger.echo();
+  //logger.echo();
   logger.recordln();
   
 }

@@ -24,7 +24,7 @@ void GPS::initialize()
   data.begin(9600);
   
   data.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  data.sendCommand(PMTK_SET_NMEA_UPDATE_5HZ);
+  data.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);
   
   // useInterrupt(true);
   OCR0A = 0xAF;
