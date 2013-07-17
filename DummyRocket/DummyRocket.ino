@@ -29,20 +29,17 @@ GPS gps;
 SIGNAL(TIMER0_COMPA_vect) { char c = gps.data.read(); } // GPS interrupt
 
 Trigger cutter;
+long maxAltitude = 0;
 
 void cutCallBack()
 {
-  logger.append << (millis() * .001) << "\tCutdown!";
-  logger.echo();
-  logger.recordln();
+  Serial.println("Cutdown!");
 }
 
 void stopCallBack()
 {
   cutter.disable();
-  logger.append << (millis() * .001) << "\tCutdown Secured!";
-  logger.echo();
-  logger.recordln();
+  Serial.println("Cutdown secured.");
 }
 
 
@@ -63,7 +60,7 @@ void setup()
   logger.echo();
   logger.recordln();
   
-  cutter.initialize(TRIGGER_PIN, 20000, Trigger::ABOVE, 25000, Trigger::ABOVE);
+  cutter.initialize(TRIGGER_PIN, 10, Trigger::ABOVE, 15, Trigger::ABOVE);
   cutter.onCallBack(&cutCallBack);
   cutter.offCallBack(&stopCallBack);
 }
@@ -77,7 +74,9 @@ void loop()
   // Wait for set delay
   if (!timer.ready()) return;
   
-  //cutter.update(millis());
+  maxAltitude = max(maxAltitude, gps.altitude);
+  
+  cutter.update(maxAltitude - gps.altitude);
 
   // Append time since last update
   logger.append << imu.timestamp << ",";
