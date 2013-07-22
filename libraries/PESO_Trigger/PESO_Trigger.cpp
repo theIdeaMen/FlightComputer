@@ -16,6 +16,7 @@ void Trigger::initialize(int pin, double onVal, int onDir, double offVal, int of
   _state = state;
   _on = onVal;
   _off = offVal;
+  _capture = 0;
   _onDir = onDir;
   _offDir = offDir;
   _disabled = false;
@@ -75,11 +76,13 @@ void Trigger::update(double val)
 
 void Trigger::update(double onVal, double offVal)
 {
-  if (!_state && _onDir == ABOVE && onVal > _on) { on(); return; }
-  if (!_state && _onDir == BELOW && onVal < _on) { on(); return; }
+  if (_disabled) return;
+  
+  if (!_state && _onDir == ABOVE && onVal > _on) { on(); _capture = offVal; return; }
+  if (!_state && _onDir == BELOW && onVal < _on) { on(); _capture = offVal; return; }
 
-  if (_state && _offDir == ABOVE && offVal > _off) { off(); return; }
-  if (_state && _offDir == BELOW && offVal < _off) { off(); return; }
+  if (_state && _offDir == ABOVE && (offVal - _capture) > _off) { off(); disable(); return; }
+  if (_state && _offDir == BELOW && (_capture - offVal) < _off) { off(); disable(); return; }
 }
 
 void Trigger::onCallBack(void(*func)())

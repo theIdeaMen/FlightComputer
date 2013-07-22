@@ -10,6 +10,7 @@ class Trigger
     bool _state;
     double _on;
     double _off;
+    double _capture;
     bool _disabled;
     
     int _onDir;

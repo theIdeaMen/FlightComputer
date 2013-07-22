@@ -20,10 +20,25 @@
 #define CUT_EXPRMNT2 7
 #define CUT_EXPRMNT3 8
 
-#define SAMPLE_RATE 35      // Must be between 4 and 35 Hz
+#define REMOVE_BEFORE_FLIGHT 9
+
+#define SAMPLE_RATE 31      // Must be between 4 and 35 Hz
+
+// Altitude drop trigger for MAIN FLIGHT TERMINATION UNIT
+Trigger cutter(CUTDOWN_PIN, 40, Trigger::ABOVE, 5000, Trigger::ABOVE);
+// Altitude drop trigger
+Trigger cut_exprmnt1(CUT_EXPRMNT1, 5, Trigger::ABOVE, 5000, Trigger::ABOVE);
+// Ground command trigger
+Trigger cut_exprmnt2(CUT_EXPRMNT2, 20000, Trigger::ABOVE, 5000, Trigger::ABOVE);
+// Specific altitude trigger
+Trigger cut_exprmnt3(CUT_EXPRMNT3, 25000, Trigger::ABOVE, 5000, Trigger::ABOVE);
+
+long maxAltitude = 0;
+
 
 Logger logger;
 Timer timer(SAMPLE_RATE);
+Timer armTimer(1);
 
 IMU imu;
 void imuInterrupt() { imu.interrupt(); } // IMU interrupt
@@ -32,13 +47,6 @@ void imuInterrupt() { imu.interrupt(); } // IMU interrupt
 GPS gps;
 SIGNAL(TIMER0_COMPA_vect) { char c = gps.data.read(); } // GPS interrupt
 
-Trigger cutter;
-long maxAltitude = 0;
-
-Trigger cut_exprmnt1;
-Trigger cut_exprmnt2;
-Trigger cut_exprmnt3;
-
 void cutCallBack()
 {
   Serial.println("Cutdown!");
@@ -46,7 +54,6 @@ void cutCallBack()
 
 void stopCallBack()
 {
-  cutter.disable();
   Serial.println("Cutdown secured.");
 }
 
@@ -56,6 +63,8 @@ void setup()
   Serial.begin(115200);
   
   Wire.begin();
+  
+  pinMode(REMOVE_BEFORE_FLIGHT, INPUT);
   
   while(imu.initialize(imuInterrupt, SAMPLE_RATE))
     delay(100);
@@ -68,15 +77,14 @@ void setup()
   logger.echo();
   logger.recordln();
   
-  cutter.initialize(CUTDOWN_PIN, 5, Trigger::ABOVE, 10, Trigger::ABOVE);
   cutter.onCallBack(&cutCallBack);
   cutter.offCallBack(&stopCallBack);
-  
-  cut_exprmnt1.initialize(CUT_EXPRMNT1, 20000, Trigger::ABOVE, 25000, Trigger::ABOVE);
 }
 
 void loop()
 {
+
+  if (digitalRead(REMOVE_BEFORE_FLIGHT) == HIGH) { armTimer.reset(); return; }
   
   imu.update();
   gps.update();
@@ -84,10 +92,16 @@ void loop()
   // Wait for set delay
   if (!timer.ready()) return;
   
-  maxAltitude = max(maxAltitude, gps.altitude);
-  
-  cutter.update(maxAltitude - gps.altitude);
-  cut_exprmnt1.update(millis());
+  // Arm the cutdowns after 10 minutes
+  if (armTimer.delta() > 600000)
+  {
+    unsigned long ms = millis();
+    maxAltitude = max(maxAltitude, gps.altitude);
+    cutter.update(maxAltitude - gps.altitude, ms);
+    cut_exprmnt1.update(maxAltitude - gps.altitude, ms);
+    cut_exprmnt2.update(ms);
+    cut_exprmnt3.update(gps.altitude, ms);
+  }
 
   // Append time since last update
   logger.append << imu.timestamp << ",";

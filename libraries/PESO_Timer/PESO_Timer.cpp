@@ -18,3 +18,8 @@ uint16_t Timer::delta()
 {
   return (uint16_t)(millis() - ms);
 }
+
+void Timer::reset()
+{
+  ms = millis();
+}
