@@ -15,7 +15,11 @@
 #include <PESO_GPS.h>
 
 #include <PESO_Trigger.h>
-#define TRIGGER_PIN 5
+#define CUTDOWN_PIN 5
+#define CUT_EXPRMNT1 6
+#define CUT_EXPRMNT2 7
+#define CUT_EXPRMNT3 8
+
 #define SAMPLE_RATE 35      // Must be between 4 and 35 Hz
 
 Logger logger;
@@ -30,6 +34,10 @@ SIGNAL(TIMER0_COMPA_vect) { char c = gps.data.read(); } // GPS interrupt
 
 Trigger cutter;
 long maxAltitude = 0;
+
+Trigger cut_exprmnt1;
+Trigger cut_exprmnt2;
+Trigger cut_exprmnt3;
 
 void cutCallBack()
 {
@@ -60,9 +68,11 @@ void setup()
   logger.echo();
   logger.recordln();
   
-  cutter.initialize(TRIGGER_PIN, 10, Trigger::ABOVE, 15, Trigger::ABOVE);
+  cutter.initialize(CUTDOWN_PIN, 5, Trigger::ABOVE, 10, Trigger::ABOVE);
   cutter.onCallBack(&cutCallBack);
   cutter.offCallBack(&stopCallBack);
+  
+  cut_exprmnt1.initialize(CUT_EXPRMNT1, 20000, Trigger::ABOVE, 25000, Trigger::ABOVE);
 }
 
 void loop()
@@ -77,6 +87,7 @@ void loop()
   maxAltitude = max(maxAltitude, gps.altitude);
   
   cutter.update(maxAltitude - gps.altitude);
+  cut_exprmnt1.update(millis());
 
   // Append time since last update
   logger.append << imu.timestamp << ",";

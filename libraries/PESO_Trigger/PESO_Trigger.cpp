@@ -69,8 +69,8 @@ void Trigger::update(double val)
   if (!_state && _onDir == ABOVE && val > _on) { on(); return; }
   if (!_state && _onDir == BELOW && val < _on) { on(); return; }
 
-  if (_state && _offDir == ABOVE && val > _off) { off(); return; }
-  if (_state && _offDir == BELOW && val < _off) { off(); return; }
+  if (_state && _offDir == ABOVE && val > _off) { off(); disable(); return; }
+  if (_state && _offDir == BELOW && val < _off) { off(); disable(); return; }
 }
 
 void Trigger::update(double onVal, double offVal)
