@@ -16,6 +16,7 @@
 #include <PESO_GPS.h>
 
 #include <PESO_Trigger.h>
+
 #define CUTDOWN_PIN 5
 #define CUT_EXPRMNT1 6
 #define CUT_EXPRMNT2 7
@@ -27,7 +28,7 @@
 
 #define REMOVE_BEFORE_FLIGHT 11
 
-#define SAMPLE_RATE 31      // Must be between 4 and 35 Hz
+#define SAMPLE_RATE 29      // Must be between 4 and 35 Hz
 
 // Altitude drop trigger for MAIN FLIGHT TERMINATION UNIT
 Trigger cutter(CUTDOWN_PIN, 40, Trigger::ABOVE, 5000, Trigger::ABOVE);
@@ -52,18 +53,37 @@ Timer hrtbtTimer(10000);
 IMU imu;
 void imuInterrupt() { imu.interrupt(); } // IMU interrupt
 
-
 GPS gps;
 SIGNAL(TIMER0_COMPA_vect) { char c = gps.data.read(); } // GPS interrupt
 
 void cutCallBack()
 {
-  Serial.println("Cutdown!");
+  logger.append << millis() << ",";
+  logger.append << "Main Cutdown Triggered";
+  logger.echo();
+  logger.recordln();
 }
 
-void stopCallBack()
+void exp1CallBack()
 {
-  Serial.println("Cutdown secured.");
+  logger.append << millis() << ",";
+  logger.append << "Altitude Drop Cutdown Triggered";
+  logger.echo();
+  logger.recordln();
+}
+void exp2CallBack()
+{
+  logger.append << millis() << ",";
+  logger.append << "Ground Command Cutdown Triggered";
+  logger.echo();
+  logger.recordln();
+}
+void exp3CallBack()
+{
+  logger.append << millis() << ",";
+  logger.append << "Reached Altitude Cutdown Triggered";
+  logger.echo();
+  logger.recordln();
 }
 
 
@@ -96,7 +116,9 @@ void setup()
   logger.recordln();
   
   cutter.onCallBack(&cutCallBack);
-  cutter.offCallBack(&stopCallBack);
+  cut_exprmnt1.onCallBack(&exp1CallBack);
+  cut_exprmnt2.onCallBack(&exp2CallBack);
+  cut_exprmnt3.onCallBack(&exp3CallBack);
 }
 
 void loop()
