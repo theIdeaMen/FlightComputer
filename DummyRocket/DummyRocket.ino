@@ -144,7 +144,7 @@ void loop()
   // Check for radio link command
   if (vw_get_message(buf, &buflen))
   {
-    logger.append << millis();
+    logger.append << millis() << ",";
     for (short i = 0; i < buflen; i++)
     {
       logger.append << buf[i];
@@ -153,14 +153,15 @@ void loop()
         if (buf[i+1] == 'C' && buf[i+2] == 'U' && buf[i+3] == 'T' && buf[i+4] == '!')
           command = 2;
       }
-      logger.echo();
-      logger.recordln();
     }
+    logger.echo();
+    logger.recordln();
   }
 
   // Wait for set delay
   if (!timer.ready()) return;
   
+  // Sound buzzer once
   if (count < 20)
   {
     digitalWrite(BUZZER, HIGH);
@@ -216,7 +217,6 @@ void loop()
   logger.append << gps.speed << ",";
   logger.append << gps.altitude;
   
-  //logger.echo();
   logger.recordln();
   
 }
