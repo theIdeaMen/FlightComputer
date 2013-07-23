@@ -20,7 +20,9 @@
 #define CUT_EXPRMNT2 7
 #define CUT_EXPRMNT3 8
 
-#define REMOVE_BEFORE_FLIGHT 9
+#define HEARTBEAT 9
+
+#define REMOVE_BEFORE_FLIGHT 10
 
 #define SAMPLE_RATE 31      // Must be between 4 and 35 Hz
 
@@ -34,11 +36,12 @@ Trigger cut_exprmnt2(CUT_EXPRMNT2, 20000, Trigger::ABOVE, 5000, Trigger::ABOVE);
 Trigger cut_exprmnt3(CUT_EXPRMNT3, 25000, Trigger::ABOVE, 5000, Trigger::ABOVE);
 
 long maxAltitude = 0;
-
+unsigned long ms = 0;
 
 Logger logger;
 Timer timer(SAMPLE_RATE);
 Timer armTimer(1);
+Timer hrtbtTimer(10000);
 
 IMU imu;
 void imuInterrupt() { imu.interrupt(); } // IMU interrupt
@@ -65,6 +68,8 @@ void setup()
   Wire.begin();
   
   pinMode(REMOVE_BEFORE_FLIGHT, INPUT);
+  pinMode(HEARTBEAT, OUTPUT);
+  digitalWrite(HEARTBEAT, LOW);
   
   while(imu.initialize(imuInterrupt, SAMPLE_RATE))
     delay(100);
@@ -84,10 +89,15 @@ void setup()
 void loop()
 {
 
-  if (digitalRead(REMOVE_BEFORE_FLIGHT) == HIGH) { armTimer.reset(); return; }
+  if (hrtbtTimer.ready()) 
+    digitalWrite(HEARTBEAT, HIGH);
+  else
+    digitalWrite(HEARTBEAT, LOW);
   
   imu.update();
   gps.update();
+  
+  if (digitalRead(REMOVE_BEFORE_FLIGHT) == HIGH) { armTimer.reset(); return; }
 
   // Wait for set delay
   if (!timer.ready()) return;
@@ -95,14 +105,14 @@ void loop()
   // Arm the cutdowns after 10 minutes
   if (armTimer.delta() > 600000)
   {
-    unsigned long ms = millis();
+    ms = millis();
     maxAltitude = max(maxAltitude, gps.altitude);
     cutter.update(maxAltitude - gps.altitude, ms);
     cut_exprmnt1.update(maxAltitude - gps.altitude, ms);
     cut_exprmnt2.update(ms);
     cut_exprmnt3.update(gps.altitude, ms);
   }
-
+  
   // Append time since last update
   logger.append << imu.timestamp << ",";
   
