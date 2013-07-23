@@ -40,6 +40,9 @@ Trigger cut_exprmnt3(CUT_EXPRMNT3, 25000, Trigger::ABOVE, 5000, Trigger::ABOVE);
 
 long maxAltitude = 0;
 unsigned long ms = 0;
+short command = 0;
+byte buf[VW_MAX_MESSAGE_LEN];
+byte buflen = VW_MAX_MESSAGE_LEN;
 
 Logger logger;
 Timer timer(SAMPLE_RATE);
@@ -73,10 +76,11 @@ void setup()
   // Initialise the IO and ISR
   vw_set_ptt_inverted(true);    // Required for DR3100
   vw_setup(2000);	              // Bits per sec
-  vw_set_rx_pin(2);             // Pin for receiving data
+  vw_set_rx_pin(COMMAND_LINK);  // Pin for receiving data
   vw_rx_start();                // Start the receiver PLL running
   
   pinMode(REMOVE_BEFORE_FLIGHT, INPUT);
+  digitalWrite(REMOVE_BEFORE_FLIGHT, HIGH);
   pinMode(HEARTBEAT, OUTPUT);
   digitalWrite(HEARTBEAT, LOW);
   
@@ -106,11 +110,26 @@ void loop()
   imu.update();
   gps.update();
   
-  if (digitalRead(REMOVE_BEFORE_FLIGHT) == HIGH) { armTimer.reset(); return; }
+  if (digitalRead(REMOVE_BEFORE_FLIGHT) == LOW) { armTimer.reset(); return; }
+  
+  // Check for radio link command
+  if (vw_get_message(buf, &buflen))
+  {
+    for (short i = 0; i < buflen; i++)
+    {
+      Serial.print(buf[i]);
+      if (buf[i] == '-')
+      {
+        if (buf[i+1] == 'C' && buf[i+2] == 'U' && buf[i+3] == 'T' && buf[i+4] == '!')
+          command = 2;
+      }
+      Serial.print(" ");
+    }
+  }
 
   // Wait for set delay
   if (!timer.ready()) return;
-  
+
   // Arm the cutdowns after 10 minutes
   if (armTimer.delta() > 600000)
   {
@@ -118,7 +137,7 @@ void loop()
     maxAltitude = max(maxAltitude, gps.altitude);
     cutter.update(maxAltitude - gps.altitude, ms);
     cut_exprmnt1.update(maxAltitude - gps.altitude, ms);
-    cut_exprmnt2.update(ms);
+    cut_exprmnt2.update(command, ms);
     cut_exprmnt3.update(gps.altitude, ms);
   }
   
