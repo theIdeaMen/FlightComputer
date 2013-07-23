@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <I2Cdev.h>
+#include <VirtualWire.h>
 
 #include <PESO_Timer.h>
 
@@ -22,16 +23,18 @@
 
 #define HEARTBEAT 9
 
-#define REMOVE_BEFORE_FLIGHT 10
+#define COMMAND_LINK 10
+
+#define REMOVE_BEFORE_FLIGHT 11
 
 #define SAMPLE_RATE 31      // Must be between 4 and 35 Hz
 
 // Altitude drop trigger for MAIN FLIGHT TERMINATION UNIT
 Trigger cutter(CUTDOWN_PIN, 40, Trigger::ABOVE, 5000, Trigger::ABOVE);
 // Altitude drop trigger
-Trigger cut_exprmnt1(CUT_EXPRMNT1, 5, Trigger::ABOVE, 5000, Trigger::ABOVE);
+Trigger cut_exprmnt1(CUT_EXPRMNT1, 40, Trigger::ABOVE, 5000, Trigger::ABOVE);
 // Ground command trigger
-Trigger cut_exprmnt2(CUT_EXPRMNT2, 20000, Trigger::ABOVE, 5000, Trigger::ABOVE);
+Trigger cut_exprmnt2(CUT_EXPRMNT2, 1, Trigger::ABOVE, 5000, Trigger::ABOVE);
 // Specific altitude trigger
 Trigger cut_exprmnt3(CUT_EXPRMNT3, 25000, Trigger::ABOVE, 5000, Trigger::ABOVE);
 
@@ -66,6 +69,12 @@ void setup()
   Serial.begin(115200);
   
   Wire.begin();
+  
+  // Initialise the IO and ISR
+  vw_set_ptt_inverted(true);    // Required for DR3100
+  vw_setup(2000);	              // Bits per sec
+  vw_set_rx_pin(2);             // Pin for receiving data
+  vw_rx_start();                // Start the receiver PLL running
   
   pinMode(REMOVE_BEFORE_FLIGHT, INPUT);
   pinMode(HEARTBEAT, OUTPUT);
