@@ -17,17 +17,19 @@
 
 #include <PESO_Trigger.h>
 
-#define CUTDOWN_PIN 5
-#define CUT_EXPRMNT1 6
-#define CUT_EXPRMNT2 7
-#define CUT_EXPRMNT3 8
+// Pin definitions
+#define CUTDOWN_PIN   5
+#define CUT_EXPRMNT1  6
+#define CUT_EXPRMNT2  7
+#define CUT_EXPRMNT3  8
 
-#define HEARTBEAT 9
+#define HEARTBEAT     9
+#define BUZZER        10
+#define COMMAND_LINK  11
 
-#define COMMAND_LINK 10
+#define REMOVE_BEFORE_FLIGHT 12
 
-#define REMOVE_BEFORE_FLIGHT 11
-
+// Data logging rate
 #define SAMPLE_RATE 29      // Must be between 4 and 35 Hz
 
 // Altitude drop trigger for MAIN FLIGHT TERMINATION UNIT
@@ -39,9 +41,11 @@ Trigger cut_exprmnt2(CUT_EXPRMNT2, 1, Trigger::ABOVE, 5000, Trigger::ABOVE);
 // Specific altitude trigger
 Trigger cut_exprmnt3(CUT_EXPRMNT3, 25000, Trigger::ABOVE, 5000, Trigger::ABOVE);
 
+// Variables
 long maxAltitude = 0;
 unsigned long ms = 0;
 short command = 0;
+short count = 0;
 byte buf[VW_MAX_MESSAGE_LEN];
 byte buflen = VW_MAX_MESSAGE_LEN;
 
@@ -99,10 +103,13 @@ void setup()
   vw_set_rx_pin(COMMAND_LINK);  // Pin for receiving data
   vw_rx_start();                // Start the receiver PLL running
   
-  pinMode(REMOVE_BEFORE_FLIGHT, INPUT);
-  digitalWrite(REMOVE_BEFORE_FLIGHT, HIGH);
   pinMode(HEARTBEAT, OUTPUT);
   digitalWrite(HEARTBEAT, LOW);
+  pinMode(BUZZER, OUTPUT);
+  digitalWrite(BUZZER, LOW);
+  pinMode(REMOVE_BEFORE_FLIGHT, INPUT);
+  digitalWrite(REMOVE_BEFORE_FLIGHT, HIGH);
+  
   
   while(imu.initialize(imuInterrupt, SAMPLE_RATE))
     delay(100);
@@ -137,20 +144,32 @@ void loop()
   // Check for radio link command
   if (vw_get_message(buf, &buflen))
   {
+    logger.append << millis();
     for (short i = 0; i < buflen; i++)
     {
-      Serial.print(buf[i]);
+      logger.append << buf[i];
       if (buf[i] == '-')
       {
         if (buf[i+1] == 'C' && buf[i+2] == 'U' && buf[i+3] == 'T' && buf[i+4] == '!')
           command = 2;
       }
-      Serial.print(" ");
+      logger.echo();
+      logger.recordln();
     }
   }
 
   // Wait for set delay
   if (!timer.ready()) return;
+  
+  if (count < 20)
+  {
+    digitalWrite(BUZZER, HIGH);
+    count++;
+  }
+  else
+  {
+    digitalWrite(BUZZER, LOW);
+  }
 
   // Arm the cutdowns after 10 minutes
   if (armTimer.delta() > 600000)
@@ -161,6 +180,9 @@ void loop()
     cut_exprmnt1.update(maxAltitude - gps.altitude, ms);
     cut_exprmnt2.update(command, ms);
     cut_exprmnt3.update(gps.altitude, ms);
+    
+    if (gps.altitude < 600)
+      count = 0;
   }
   
   // Append time since last update
