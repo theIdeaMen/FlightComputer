@@ -14,9 +14,9 @@ bool Timer::ready()
   return true;
 }
 
-uint16_t Timer::delta()
+uint32_t Timer::delta()
 {
-  return (uint16_t)(millis() - ms);
+  return (millis() - ms);
 }
 
 void Timer::reset()

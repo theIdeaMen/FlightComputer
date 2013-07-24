@@ -15,7 +15,7 @@ class Timer
   
     Timer(uint16_t hz);
     bool ready();
-    uint16_t delta();
+    uint32_t delta();
     void reset();
   
 };

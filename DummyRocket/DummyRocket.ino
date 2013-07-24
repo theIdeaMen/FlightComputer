@@ -23,11 +23,11 @@
 #define CUT_EXPRMNT2  7
 #define CUT_EXPRMNT3  8
 
-#define HEARTBEAT     9
-#define BUZZER        10
-#define COMMAND_LINK  11
+#define HEARTBEAT     10
+#define BUZZER        34
+#define COMMAND_LINK  9
 
-#define REMOVE_BEFORE_FLIGHT 12
+#define REMOVE_BEFORE_FLIGHT 33
 
 // Data logging rate
 #define SAMPLE_RATE 29      // Must be between 4 and 35 Hz
@@ -162,7 +162,7 @@ void loop()
   if (!timer.ready()) return;
   
   // Sound buzzer once
-  if (count < 20)
+  if (count < 30)
   {
     digitalWrite(BUZZER, HIGH);
     count++;
