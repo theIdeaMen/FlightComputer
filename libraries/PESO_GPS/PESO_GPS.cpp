@@ -2,6 +2,7 @@
 
 GPS::GPS()
 {
+/*
   hour = 1;
   minute = 1;
   seconds = 1;
@@ -15,6 +16,7 @@ GPS::GPS()
   lon = '1';
   speed = 1;
   altitude = 1;
+*/
 }
 
 void GPS::initialize()

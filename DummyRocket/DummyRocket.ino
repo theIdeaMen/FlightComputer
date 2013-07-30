@@ -98,7 +98,6 @@ void setup()
   Wire.begin();
   
   // Initialise the IO and ISR
-  vw_set_ptt_inverted(true);    // Required for DR3100
   vw_setup(2000);	              // Bits per sec
   vw_set_rx_pin(COMMAND_LINK);  // Pin for receiving data
   vw_rx_start();                // Start the receiver PLL running
@@ -198,19 +197,19 @@ void loop()
   logger.append << (imu.gyro[0]/imu.gyro_sens) << "," << (imu.gyro[1]/imu.gyro_sens) << "," << (imu.gyro[2]/imu.gyro_sens) << ",";
 
   // Append GPS data
-  if (gps.hour < 10) logger.append << 0;
-  logger.append << int(gps.hour) << ":";
-  if (gps.minute < 10) logger.append << 0;
-  logger.append << int(gps.minute) << ":";
-  if (gps.seconds < 10) logger.append << 0;
-  logger.append << int(gps.seconds) << "." << int(gps.milliseconds) << ",";
+  //if (gps.hour < 10) logger.append << 0;
+  logger.append << setfill('0') << setw(2) << int(gps.hour) << ":";
+  //if (gps.minute < 10) logger.append << 0;
+  logger.append << setw(2) << int(gps.minute) << ":";
+  //if (gps.seconds < 10) logger.append << 0;
+  logger.append << setw(2) << int(gps.seconds) << "." << setw(3) << int(gps.milliseconds) << ",";
   
-  if (gps.day < 10) logger.append << 0;
-  logger.append << int(gps.day) << "/";
-  if (gps.month < 10) logger.append << 0;
-  logger.append << int(gps.month) << "/20";
-  if (gps.year < 10) logger.append << 0;
-  logger.append << int(gps.year) << ",";
+  //if (gps.day < 10) logger.append << 0;
+  logger.append << setw(2) << int(gps.day) << "/";
+  //if (gps.month < 10) logger.append << 0;
+  logger.append << setw(2) << int(gps.month) << "/20";
+  //if (gps.year < 10) logger.append << 0;
+  logger.append << setw(2) << int(gps.year) << ",";
   
   logger.append << gps.latitude << gps.lat << ",";
   logger.append << gps.longitude << gps.lon << ",";

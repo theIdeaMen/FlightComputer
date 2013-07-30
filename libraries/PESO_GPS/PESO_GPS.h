@@ -14,6 +14,7 @@ class GPS
   float latitude, longitude, altitude;
   float speed;
   char lat, lon;
+  bool fix;
   
   GPS();
   void initialize();
