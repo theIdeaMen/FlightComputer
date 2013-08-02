@@ -176,8 +176,11 @@ void loop()
   {
     ms = millis();
     maxAltitude = max(maxAltitude, gps.altitude);
-    cutter.update(maxAltitude - gps.altitude, ms);
-    cut_exprmnt1.update(maxAltitude - gps.altitude, ms);
+    if (gps.altitude)
+    {
+      cutter.update(maxAltitude - gps.altitude, ms);
+      cut_exprmnt1.update(maxAltitude - gps.altitude, ms);
+    }
     cut_exprmnt2.update(command, ms);
     cut_exprmnt3.update(gps.altitude, ms);
     
