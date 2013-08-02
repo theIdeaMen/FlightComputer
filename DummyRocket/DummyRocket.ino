@@ -155,7 +155,7 @@ void loop()
       }
     }
     int RSSI = analogRead(RSSI_PIN);
-    logger.append << ",RSSI: " << RSSI << ",";
+    logger.append << ",RSSI: " << RSSI;
     logger.echo();
     logger.recordln();
   }
