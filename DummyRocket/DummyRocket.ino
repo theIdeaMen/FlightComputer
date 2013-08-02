@@ -26,6 +26,7 @@
 #define HEARTBEAT     10
 #define BUZZER        34
 #define COMMAND_LINK  9
+#define RSSI_PIN      1    // Analog pin number
 
 #define REMOVE_BEFORE_FLIGHT 33
 
@@ -153,6 +154,8 @@ void loop()
           command = 2;
       }
     }
+    int RSSI = analogRead(RSSI_PIN);
+    logger.append << ",RSSI: " << RSSI << ",";
     logger.echo();
     logger.recordln();
   }
