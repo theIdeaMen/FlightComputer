@@ -118,7 +118,7 @@ void setup()
   
   gps.initialize();
   
-  logger.append << setprecision(9) << "timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,gyro_x,gyro_y,gyro_z,time,date,lat,lon,speed,alt";
+  logger.append << setprecision(9) << "timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z,time,date,lat,lon,speed,alt";
   logger.echo();
   logger.recordln();
   
@@ -164,7 +164,7 @@ void loop()
   if (!timer.ready()) return;
   
   // Sound buzzer once
-  if (count < 30)
+  if (count < 50)
   {
     digitalWrite(BUZZER, HIGH);
     count++;
@@ -200,7 +200,7 @@ void loop()
   // Append IMU data
   logger.append << (imu.q[0]/(float)1073741824) << "," << (imu.q[1]/(float)1073741824) << "," << (imu.q[2]/(float)1073741824) << "," << (imu.q[3]/(float)1073741824) << ",";
   logger.append << (imu.aa[0]/(float)imu.aa_sens) << "," << (imu.aa[1]/(float)imu.aa_sens) << "," << (imu.aa[2]/(float)imu.aa_sens) << ",";
-  logger.append << (imu.gyro[0]/imu.gyro_sens) << "," << (imu.gyro[1]/imu.gyro_sens) << "," << (imu.gyro[2]/imu.gyro_sens) << ",";
+  //logger.append << (imu.gyro[0]/imu.gyro_sens) << "," << (imu.gyro[1]/imu.gyro_sens) << "," << (imu.gyro[2]/imu.gyro_sens) << ",";
 
   // Append GPS data
   //if (gps.hour < 10) logger.append << 0;
