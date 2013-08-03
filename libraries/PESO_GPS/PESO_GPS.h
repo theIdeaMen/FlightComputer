@@ -2,6 +2,7 @@
 #define __PESO_GPS__
 
 #include "../Adafruit_GPS/Adafruit_GPS.h"
+#include <math.h>
 
 class GPS
 {
@@ -13,12 +14,16 @@ class GPS
   uint16_t milliseconds;
   float latitude, longitude, altitude;
   float speed;
-  char lat, lon;
   bool fix;
   
   GPS();
   void initialize();
   void update();
+  
+  private:
+  
+  char lat, lon;
+  float coord2decimal(float coord, char dir);
   
 };
 

@@ -31,7 +31,7 @@
 #define REMOVE_BEFORE_FLIGHT 33
 
 // Data logging rate
-#define SAMPLE_RATE 29      // Must be between 4 and 35 Hz
+#define SAMPLE_RATE 35      // Must be between 4 and 35 Hz
 
 // Altitude drop trigger for MAIN FLIGHT TERMINATION UNIT
 Trigger cutter(CUTDOWN_PIN, 40, Trigger::ABOVE, 5000, Trigger::ABOVE);
@@ -217,8 +217,8 @@ void loop()
   //if (gps.year < 10) logger.append << 0;
   logger.append << setw(2) << int(gps.year) << ",";
   
-  logger.append << gps.latitude << gps.lat << ",";
-  logger.append << gps.longitude << gps.lon << ",";
+  logger.append << gps.latitude << ",";
+  logger.append << gps.longitude << ",";
   logger.append << gps.speed << ",";
   logger.append << gps.altitude;
   

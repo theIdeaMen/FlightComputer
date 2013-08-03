@@ -2,21 +2,7 @@
 
 GPS::GPS()
 {
-/*
-  hour = 1;
-  minute = 1;
-  seconds = 1;
-  milliseconds = 1;
-  day = 1;
-  month = 1;
-  year = 1;
-  latitude = 1;
-  lat = '1';
-  longitude = 1;
-  lon = '1';
-  speed = 1;
-  altitude = 1;
-*/
+
 }
 
 void GPS::initialize()
@@ -53,5 +39,20 @@ void GPS::update()
     lon = data.lon;
     speed = data.speed;
     altitude = data.altitude;
+    
+    latitude = coord2decimal(latitude, lat);
+    longitude = coord2decimal(longitude, lon);
   }
+}
+
+float GPS::coord2decimal(float coord, char dir)
+{
+  int degrees = coord / 100;
+  float minutes = fmod(coord,100) / 60;
+  float newCoord = float(degrees) + minutes;
+  
+  if (dir == 'S' || dir == 'W')
+    newCoord = newCoord * (-1);
+    
+  return newCoord;
 }
