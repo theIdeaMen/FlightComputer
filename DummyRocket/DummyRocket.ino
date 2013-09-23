@@ -31,7 +31,7 @@
 #define REMOVE_BEFORE_FLIGHT 33
 
 // Data logging rate
-#define SAMPLE_RATE 20      // Must be between 4 and 35 Hz
+#define SAMPLE_RATE 20      // Must be between 4 and 20 Hz
 
 // Altitude drop trigger for MAIN FLIGHT TERMINATION UNIT
 Trigger cutter(CUTDOWN_PIN, 40, Trigger::ABOVE, 5000, Trigger::ABOVE);
@@ -127,7 +127,7 @@ void setup()
   cut_exprmnt2.onCallBack(&exp2CallBack);
   cut_exprmnt3.onCallBack(&exp3CallBack);
   
-  // Sound buzzer once
+  // Sound buzzer twice
   digitalWrite(BUZZER, HIGH);
   delay(800);
   digitalWrite(BUZZER, LOW);
