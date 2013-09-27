@@ -98,7 +98,7 @@ void setup()
   
   Wire.begin();
   
-  // Initialise the IO and ISR
+  // Initialize the IO and ISR
   vw_setup(2000);	              // Bits per sec
   vw_set_rx_pin(COMMAND_LINK);  // Pin for receiving data
   vw_rx_start();                // Start the receiver PLL running
@@ -231,7 +231,7 @@ void loop()
   logger.append << gps.speed << ",";
   logger.append << gps.altitude;
   
-  logger.echo();
+  //logger.echo();
   logger.recordln();
   
 }
