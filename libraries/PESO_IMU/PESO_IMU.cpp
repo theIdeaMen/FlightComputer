@@ -5,21 +5,20 @@ IMU::IMU()
   mpuInterrupt = false;
 }
 
-int IMU::initialize(void (*func)(), unsigned short rate)
+int IMU::initialize()
 {
   if (mpu_init())
     return -1;
   if (mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL))
     return -2;
-  if (mpu_set_sample_rate(rate))
+  if (mpu_set_sample_rate(100))
     return -3;
-  if (mpu_set_accel_fsr(8))
+  if (mpu_set_accel_fsr(16))
     return -4;
   if (mpu_get_gyro_sens(&gyro_sens))
     return -5;
   if (mpu_get_accel_sens(&aa_sens))
     return -6;
-
   if (dmp_load_motion_driver_firmware())
     return -7;
   else
@@ -28,11 +27,10 @@ int IMU::initialize(void (*func)(), unsigned short rate)
     
     if (dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL))
       return -8;
-    if (dmp_set_fifo_rate(rate))
+    if (dmp_set_fifo_rate(50))
       return -9;
     if (mpu_set_dmp_state(1))
       return -10;
-    attachInterrupt(0, func, RISING);
     if (mpu_get_int_status(&mpuIntStatus))
       return -11;
     Serial.println("DMP On");
@@ -41,26 +39,20 @@ int IMU::initialize(void (*func)(), unsigned short rate)
   return 0;
 }
 
-void IMU::interrupt()
-{
-  mpuInterrupt = true;
-}
-
 void IMU::update()
 {
-  if (!mpuInterrupt) return;
-
-  dmp_read_fifo(gyro, aa, q, &timestamp, &sensors, &more);
-  mpu_get_temperature(&temperature, &timestamp);
-  timestamp = millis();
-  
-  mpuInterrupt = false;
   mpu_get_int_status(&mpuIntStatus);
-
+  
   if ((mpuIntStatus & 0x10))
   {
     Serial.println("fifo reset");
     mpu_reset_fifo();
     return;
+  }
+  else if ((mpuIntStatus & 0x01))
+  {
+    dmp_read_fifo(gyro, aa, q, &timestamp, &sensors, &more);
+    mpu_get_temperature(&temperature, &timestamp);
+    timestamp = millis();
   }
 }

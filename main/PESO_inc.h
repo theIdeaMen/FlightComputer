@@ -22,6 +22,9 @@
 #include <PESO_Trigger.h>
 
 // Pin definitions
+#define IMU_INTRPT    36
+#define MICROSD_CS    33
+
 #define CUTDOWN_PIN   5
 #define CUT_EXPRMNT1  6
 #define CUT_EXPRMNT2  7

@@ -23,11 +23,8 @@ class IMU
   unsigned long timestamp;
   long temperature;
   
-  volatile bool mpuInterrupt;     // indicates whether MPU interrupt pin has gone high
-  
   IMU();
-  int initialize(void (*func)(), unsigned short rate);
-  void interrupt();
+  int initialize();
   void update();
   
 };
