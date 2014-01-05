@@ -1,6 +1,14 @@
 #include "PESO_Logger.h"
 
-// Example: 3, false
+Logger::Logger()
+{
+  // Initialize config options
+  echoOn = true;
+  sprintf(callSign, "KD0UFY");
+  topAltitude = 29000;
+}
+
+// Looks for a config file then opens a new log file
 void Logger::initialize(uint8_t chip_select_pin, bool half_speed)
 {
   // initialize sd object
@@ -29,7 +37,8 @@ void Logger::initialize(uint8_t chip_select_pin, bool half_speed)
 
 void Logger::echo()
 {
-  Serial.println(buf);
+  if (echoOn)
+    Serial.println(buf);
 }
 
 void Logger::record()

@@ -2,7 +2,6 @@
 
 IMU::IMU()
 {
-  mpuInterrupt = false;
 }
 
 int IMU::initialize()
