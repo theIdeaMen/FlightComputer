@@ -4,7 +4,7 @@ Logger::Logger()
 {
   // Initialize config options
   echoOn = true;
-  sprintf(callSign, "KD0UFY");
+  callSign = "KD0UFY";
   topAltitude = 29000;
 }
 
@@ -16,6 +16,18 @@ void Logger::initialize(uint8_t chip_select_pin, bool half_speed)
   if (half_speed) spi_speed = SPI_HALF_SPEED;
 
   if (!sd.begin(chip_select_pin, spi_speed)) sd.initErrorHalt();
+
+  // Check SD card for the config file
+  sprintf(name, "config.txt");
+  if (sd.exists(name))
+  {
+    configFile.open(name);
+    if (configFile.is_open())
+    {
+      readConfigFile();
+      configFile.close();
+    }
+  }
 
   // select next available log name
   sprintf(name, "log00.csv");
@@ -53,4 +65,45 @@ void Logger::recordln()
   // append text buffer, plus new line
   logfile << buf << endl << flush;
   append.seekp(0);
+}
+
+String Logger::getCallSign()
+{
+  return callSign;
+}
+
+long Logger::getTopAlt()
+{
+  return topAltitude;
+}
+
+void Logger::readConfigFile()
+{
+  char line[50];
+  char prop[25];
+  char val[25];
+
+  while (!configFile.eof())
+  {
+    configFile.getline(line, 50);
+
+    sscanf(line, "%s %s", prop, val);
+
+    if (prop == "ECHO")
+    {
+      if (val == "OFF")
+        echoOn = false;
+    }
+
+    if (prop == "CALLSIGN")
+    {
+      callSign = val;
+    }
+
+    if (prop == "TOPALT")
+    {
+      topAltitude = atoi(val);
+    }
+
+  }
 }

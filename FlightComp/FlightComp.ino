@@ -4,18 +4,18 @@
 
 #include <Wire.h>
 #include <I2Cdev.h>
-#include <VirtualWire.h>
+//#include <VirtualWire.h>
 
-#include <SerialCommand.h>
+//#include <SerialCommand.h>
 
 #include <PESO_Timer.h>
+
+#include <SdFat.h>
+#include <PESO_Logger.h>
 
 #include <inv_mpu.h>
 #include <inv_mpu_dmp_motion_driver.h>
 #include <PESO_IMU.h>
-
-#include <SdFat.h>
-#include <PESO_Logger.h>
 
 #include <Adafruit_GPS.h>
 #include <SoftwareSerial.h>
@@ -165,3 +165,4 @@ void CUTDOWN_CB()
 {
   Serial.println("CUTDOWN_CB: Begin");
 }
+

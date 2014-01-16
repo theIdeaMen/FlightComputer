@@ -24,8 +24,11 @@
  * \brief SdFat class
  */
 //------------------------------------------------------------------------------
+/** Macro for debug. */
+#define DBG_FAIL_MACRO  // Serial.print(__FILE__);Serial.println(__LINE__)
+//------------------------------------------------------------------------------
 /** SdFat version YYYYMMDD */
-#define SD_FAT_VERSION 20120719
+#define SD_FAT_VERSION 20131225
 //------------------------------------------------------------------------------
 /** error if old IDE */
 #if !defined(ARDUINO) || ARDUINO < 100
@@ -35,6 +38,7 @@
 #include <SdFile.h>
 #include <SdStream.h>
 #include <ArduinoStream.h>
+#include <MinimumSerial.h>
 //------------------------------------------------------------------------------
 /**
  * \class SdFat
@@ -43,41 +47,22 @@
 class SdFat {
  public:
   SdFat() {}
-  /**
-   * Initialize an SdFat object. Arduino friendly version of init.
-   *
-   * Initializes the SD card, SD volume, and root directory.
-   *
-   * \param[in] chipSelectPin SD chip select pin. See Sd2Card::init().
-   * \param[in] sckRateID value for SPI SCK rate. See Sd2Card::init().
-   *
-   * \return The value one, true, is returned for success and
-   * the value zero, false, is returned for failure.
-   */
-  bool begin(uint8_t chipSelectPin = SD_CHIP_SELECT_PIN,
-    uint8_t sckRateID = SPI_FULL_SPEED) {
-    return init(sckRateID, chipSelectPin);
-  }
   /** \return a pointer to the Sd2Card object. */
-  Sd2Card* card() {return &card_;}
+  Sd2Card* card() {return &m_card;}
   bool chdir(bool set_cwd = false);
   bool chdir(const char* path, bool set_cwd = false);
   void chvol();
   void errorHalt();
-  void errorHalt_P(PGM_P msg);
   void errorHalt(char const *msg);
   void errorPrint();
-  void errorPrint_P(PGM_P msg);
   void errorPrint(char const *msg);
   bool exists(const char* name);
-  bool init(uint8_t sckRateID = SPI_FULL_SPEED,
-    uint8_t chipSelectPin = SD_CHIP_SELECT_PIN);
+  bool begin(uint8_t chipSelectPin = SD_CHIP_SELECT_PIN,
+    uint8_t sckDivisor = SPI_FULL_SPEED);
   void initErrorHalt();
   void initErrorHalt(char const *msg);
-  void initErrorHalt_P(PGM_P msg);
   void initErrorPrint();
   void initErrorPrint(char const *msg);
-  void initErrorPrint_P(PGM_P msg);
   void ls(uint8_t flags = 0);
   void ls(Print* pr, uint8_t flags = 0);
   bool mkdir(const char* path, bool pFlag = true);
@@ -86,23 +71,27 @@ class SdFat {
   bool rmdir(const char* path);
   bool truncate(const char* path, uint32_t length);
   /** \return a pointer to the SdVolume object. */
-  SdVolume* vol() {return &vol_;}
+  SdVolume* vol() {return &m_vol;}
   /** \return a pointer to the volume working directory. */
-  SdBaseFile* vwd() {return &vwd_;}
+  SdBaseFile* vwd() {return &m_vwd;}
   //----------------------------------------------------------------------------
-  // static functions for stdOut
+  void errorHalt_P(PGM_P msg);
+  void errorPrint_P(PGM_P msg);
+  void initErrorHalt_P(PGM_P msg);
+  void initErrorPrint_P(PGM_P msg);
+  //----------------------------------------------------------------------------
   /**
    *  Set stdOut Print stream for messages.
    * \param[in] stream The new Print stream.
    */
-  static void setStdOut(Print* stream) {stdOut_ = stream;}
+  static void setStdOut(Print* stream) {m_stdOut = stream;}
   /** \return Print stream for messages. */
-  static Print* stdOut() {return stdOut_;}
+  static Print* stdOut() {return m_stdOut;}
 
  private:
-  Sd2Card card_;
-  SdVolume vol_;
-  SdBaseFile vwd_;
-  static Print* stdOut_;
+  Sd2Card m_card;
+  SdVolume m_vol;
+  SdBaseFile m_vwd;
+  static Print* m_stdOut;
 };
 #endif  // SdFat_h

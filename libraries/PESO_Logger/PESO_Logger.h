@@ -9,14 +9,17 @@ class Logger
   private:
     SdFat sd;
     ofstream logfile;
+    ifstream configFile;
   
     char name[10];
     char buf[256];
     
     // config options
     bool echoOn;             // Echo log to Serial
-    char callSign[10];        // The HAM call sign using the command link radio
-    long topAltitude;         // The altitude at which there should be a cutdown in meters
+    String callSign;         // The HAM call sign using the command link radio
+    long topAltitude;        // The altitude at which there should be a cutdown in meters
+
+    void readConfigFile();
   
   public:
     obufstream append;
@@ -28,7 +31,9 @@ class Logger
     void echo();
     void initialize(uint8_t chip_select_pin, bool half_speed);
     void record();
-    void recordln();  
+    void recordln();
+    String getCallSign();
+    long getTopAlt();
 };
 
 #endif __PESO_LOGGER__

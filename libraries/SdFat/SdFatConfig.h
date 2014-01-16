@@ -26,6 +26,34 @@
 #include <stdint.h>
 //------------------------------------------------------------------------------
 /**
+ * Set USE_SEPARATE_FAT_CACHE nonzero to use a second 512 byte cache
+ * for FAT table entries.  Improves performance for large writes that
+ * are not a multiple of 512 bytes.
+ */
+#ifdef __arm__
+#define USE_SEPARATE_FAT_CACHE 1
+#else  // __arm__
+#define USE_SEPARATE_FAT_CACHE 0
+#endif  // __arm__
+//------------------------------------------------------------------------------
+/**
+ * Set USE_MULTI_BLOCK_SD_IO nonzero to use multi-block SD read/write.
+ *
+ * Don't use mult-block read/write on small AVR boards.
+ */
+#if defined(RAMEND) && RAMEND < 3000
+#define USE_MULTI_BLOCK_SD_IO 0
+#else
+#define USE_MULTI_BLOCK_SD_IO 1
+#endif
+//------------------------------------------------------------------------------
+/**
+ * Force use of Arduino Standard SPI library if USE_ARDUINO_SPI_LIBRARY
+ * is nonzero.
+ */
+#define USE_ARDUINO_SPI_LIBRARY 0
+//------------------------------------------------------------------------------
+/**
  * To enable SD card CRC checking set USE_SD_CRC nonzero.
  *
  * Set USE_SD_CRC to 1 to use a smaller slower CRC-CCITT function.
@@ -37,15 +65,24 @@
 /**
  * To use multiple SD cards set USE_MULTIPLE_CARDS nonzero.
  *
- * Using multiple cards costs 400 - 500  bytes of flash.
+ * Using multiple cards costs about 200  bytes of flash.
  *
  * Each card requires about 550 bytes of SRAM so use of a Mega is recommended.
  */
 #define USE_MULTIPLE_CARDS 0
 //------------------------------------------------------------------------------
 /**
- * Set nonzero to use Serial (the HardwareSerial class) for error messages
- * and output from print functions like ls().
+ * Set DESTRUCTOR_CLOSES_FILE nonzero to close a file in its destructor.
+ *
+ * Causes use of lots of heap in ARM.
+ */
+#define DESTRUCTOR_CLOSES_FILE 0
+//------------------------------------------------------------------------------
+/**
+ * For AVR
+ *
+ * Set USE_SERIAL_FOR_STD_OUT nonzero to use Serial (the HardwareSerial class)
+ * for error messages and output from print functions like ls().
  *
  * If USE_SERIAL_FOR_STD_OUT is zero, a small non-interrupt driven class
  * is used to output messages to serial port zero.  This allows an alternate
@@ -76,52 +113,43 @@
 #define ENDL_CALLS_FLUSH 0
 //------------------------------------------------------------------------------
 /**
- * Allow use of deprecated functions if ALLOW_DEPRECATED_FUNCTIONS is nonzero
- */
-#define ALLOW_DEPRECATED_FUNCTIONS 1
-//------------------------------------------------------------------------------
-/**
  * Allow FAT12 volumes if FAT12_SUPPORT is nonzero.
  * FAT12 has not been well tested.
  */
 #define FAT12_SUPPORT 0
 //------------------------------------------------------------------------------
 /**
- * SPI init rate for SD initialization commands. Must be 5 (F_CPU/64)
- * or 6 (F_CPU/128).
+ * SPI SCK divisor for SD initialization commands.
+ * or greater
  */
-#define SPI_SD_INIT_RATE 5
-//------------------------------------------------------------------------------
-/**
- * Set the SS pin high for hardware SPI.  If SS is chip select for another SPI
- * device this will disable that device during the SD init phase.
- */
-#define SET_SPI_SS_HIGH 1
+#ifdef __AVR__
+const uint8_t SPI_SCK_INIT_DIVISOR = 64;
+#else
+const uint8_t SPI_SCK_INIT_DIVISOR = 128;
+#endif
 //------------------------------------------------------------------------------
 /**
  * Define MEGA_SOFT_SPI nonzero to use software SPI on Mega Arduinos.
  * Default pins used are SS 10, MOSI 11, MISO 12, and SCK 13.
  * Edit Software Spi pins to change pin numbers.
  *
- * MEGA_SOFT_SPI allows an unmodified Adafruit GPS Shield to be used
- * on Mega Arduinos.  Software SPI works well with GPS Shield V1.1
- * but many SD cards will fail with GPS Shield V1.0.
+ * MEGA_SOFT_SPI allows an unmodified 328 Shield to be used
+ * on Mega Arduinos.
  */
 #define MEGA_SOFT_SPI 0
 //------------------------------------------------------------------------------
 /**
  * Define LEONARDO_SOFT_SPI nonzero to use software SPI on Leonardo Arduinos.
- * Derfault pins used are SS 10, MOSI 11, MISO 12, and SCK 13.
+ * Default pins used are SS 10, MOSI 11, MISO 12, and SCK 13.
  * Edit Software Spi pins to change pin numbers.
  *
- * LEONARDO_SOFT_SPI allows an unmodified Adafruit GPS Shield to be used
- * on Leonardo Arduinos.  Software SPI works well with GPS Shield V1.1
- * but many SD cards will fail with GPS Shield V1.0.
+ * LEONARDO_SOFT_SPI allows an unmodified 328 Shield to be used
+ * on Leonardo Arduinos.
  */
 #define LEONARDO_SOFT_SPI 0
 //------------------------------------------------------------------------------
 /**
- * Set USE_SOFTWARE_SPI nonzero to always use software SPI.
+ * Set USE_SOFTWARE_SPI nonzero to always use software SPI on AVR.
  */
 #define USE_SOFTWARE_SPI 0
 // define software SPI pins so Mega can use unmodified 168/328 shields
