@@ -13,11 +13,6 @@ void GPS::initialize()
   
   data.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   data.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);
-  
-  // useInterrupt(true);
-  OCR0A = 0xAF;
-  TIMSK0 |= _BV(OCIE0A);
-
 }
 
 void GPS::update()

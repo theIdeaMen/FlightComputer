@@ -16,7 +16,7 @@ void Logger::initialize(uint8_t chip_select_pin, bool half_speed)
   if (half_speed) spi_speed = SPI_HALF_SPEED;
 
   if (!sd.begin(chip_select_pin, spi_speed)) sd.initErrorHalt();
-  
+
   // select next available log name
   sprintf(name, "log00.csv");
   for (uint8_t i = 0; i < 100; i++)

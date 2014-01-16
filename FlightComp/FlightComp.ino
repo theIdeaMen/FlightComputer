@@ -55,10 +55,11 @@ Thread GPS_thread = Thread();
 Thread COMMS_thread = Thread();
 Thread CUTDOWN_thread = Thread();
 
+
 void setup()
 {
   Serial.begin(115200);
-  
+
   logger.initialize(MICROSD_CS, false);
   logger.append << setprecision(6) << "PESO Flight Computer Log File\n";
   logger.append << "IMU,timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z\n";
@@ -67,14 +68,14 @@ void setup()
   logger.append << "CUTDOWN,timestamp,message";
   logger.echo();
   logger.recordln();
-  
+
   imu.initialize();
   
   gps.initialize();
   
   // Configure threads
   IMU_thread.onRun(IMU_CB);
-  IMU_thread.setInterval(10);
+  IMU_thread.setInterval(5);
   
   GPS_thread.onRun(GPS_CB);
   GPS_thread.setInterval(100);
@@ -96,9 +97,9 @@ void loop()
 {
   // Run threads
   Controller.run();
-  
-  // Check for command from ground control
 
+  // Check for command from ground control
+  delay(1);
 }
 
 
@@ -106,11 +107,11 @@ void loop()
 
 void IMU_CB()
 {
-  Serial.println("IMU_CB: Begin");
+  //Serial.println("IMU_CB: Begin");
   if (digitalRead(IMU_INTRPT) == LOW)
     return;
 
-  Serial.println("IMU_CB: Interrupt");  
+  //Serial.println("IMU_CB: Interrupt");  
   // Get data
   imu.update();
   
@@ -123,6 +124,7 @@ void IMU_CB()
   // Append IMU data
   logger.append << (imu.q[0]/(float)1073741824) << "," << (imu.q[1]/(float)1073741824) << "," << (imu.q[2]/(float)1073741824) << "," << (imu.q[3]/(float)1073741824) << ",";
   logger.append << (imu.aa[0]/(float)imu.aa_sens) << "," << (imu.aa[1]/(float)imu.aa_sens) << "," << (imu.aa[2]/(float)imu.aa_sens);
+  
   logger.echo();
   logger.recordln();
 }
@@ -130,6 +132,28 @@ void IMU_CB()
 void GPS_CB()
 {
   Serial.println("GPS_CB: Begin");
+  // Get data
+  gps.update();
+
+  // Append data type and time
+  logger.append << "GPS," << millis() << ",";
+  
+  // Append GPS data
+  logger.append << setfill('0') << setw(2) << int(gps.hour) << ":";
+  logger.append << setw(2) << int(gps.minute) << ":";
+  logger.append << setw(2) << int(gps.seconds) << "." << setw(3) << int(gps.milliseconds) << ",";
+  
+  logger.append << setw(2) << int(gps.day) << "/";
+  logger.append << setw(2) << int(gps.month) << "/20";
+  logger.append << setw(2) << int(gps.year) << ",";
+  
+  logger.append << gps.latitude << ",";
+  logger.append << gps.longitude << ",";
+  logger.append << gps.speed << ",";
+  logger.append << gps.altitude;
+  
+  logger.echo();
+  logger.recordln();
 }
 
 void COMMS_CB()
