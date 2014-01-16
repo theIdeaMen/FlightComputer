@@ -106,9 +106,11 @@ void loop()
 
 void IMU_CB()
 {
+  Serial.println("IMU_CB: Begin");
   if (digitalRead(IMU_INTRPT) == LOW)
     return;
-  
+
+  Serial.println("IMU_CB: Interrupt");  
   // Get data
   imu.update();
   
@@ -127,15 +129,15 @@ void IMU_CB()
   
 void GPS_CB()
 {
-  
+  Serial.println("GPS_CB: Begin");
 }
 
 void COMMS_CB()
 {
-  
+  Serial.println("COMMS_CB: Begin");
 }
 
 void CUTDOWN_CB()
 {
-  
+  Serial.println("CUTDOWN_CB: Begin");
 }
