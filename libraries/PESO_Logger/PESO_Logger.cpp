@@ -79,31 +79,31 @@ long Logger::getTopAlt()
 
 void Logger::readConfigFile()
 {
-  char line[50];
-  char prop[25];
-  char val[25];
+  char line[20];
+  char prop[20];
+  char val[20];
 
   while (!configFile.eof())
   {
-    configFile.getline(line, 50);
+    configFile.getline(line, 20);
 
     sscanf(line, "%s %s", prop, val);
-
-    if (prop == "ECHO")
+    if (strcmp(prop, "ECHO") == 0)
     {
-      if (val == "OFF")
+      if (strcmp(val, "OFF") == 0)
+      {
         echoOn = false;
+      }
     }
 
-    if (prop == "CALLSIGN")
+    if (strcmp(prop, "CALLSIGN") == 0)
     {
       callSign = val;
     }
 
-    if (prop == "TOPALT")
+    if (strcmp(prop, "TOPALT") == 0)
     {
       topAltitude = atoi(val);
     }
-
   }
 }

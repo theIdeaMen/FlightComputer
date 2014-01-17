@@ -4,7 +4,7 @@
 
 #include <Wire.h>
 #include <I2Cdev.h>
-//#include <VirtualWire.h>
+#include <VirtualWire.h>
 
 //#include <SerialCommand.h>
 
@@ -27,20 +27,7 @@
 #define IMU_INTRPT    36
 #define MICROSD_CS    33
 
-#define CUTDOWN_PIN   5
-#define CUT_EXPRMNT1  6
-#define CUT_EXPRMNT2  7
-#define CUT_EXPRMNT3  8
-
-#define HEARTBEAT     10
-#define BUZZER        34
-#define COMMAND_LINK  9
 #define RSSI_PIN      1    // Analog pin number
-
-#define REMOVE_BEFORE_FLIGHT 33
-
-// Data logging rate
-#define SAMPLE_RATE 20      // Must be between 4 and 20 Hz
 
 
 // Objects
@@ -58,6 +45,9 @@ Thread CUTDOWN_thread = Thread();
 
 void setup()
 {
+  // Power settle delay
+  delay(100);
+  
   Serial.begin(115200);
 
   logger.initialize(MICROSD_CS, false);
@@ -107,11 +97,9 @@ void loop()
 
 void IMU_CB()
 {
-  //Serial.println("IMU_CB: Begin");
   if (digitalRead(IMU_INTRPT) == LOW)
     return;
-
-  //Serial.println("IMU_CB: Interrupt");  
+ 
   // Get data
   imu.update();
   
@@ -131,7 +119,6 @@ void IMU_CB()
   
 void GPS_CB()
 {
-  Serial.println("GPS_CB: Begin");
   // Get data
   gps.update();
 
