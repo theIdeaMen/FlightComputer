@@ -4,7 +4,6 @@
 
 #include <Wire.h>
 #include <I2Cdev.h>
-//#include <VirtualWire.h>
 
 #include <SerialCommand.h>
 
@@ -31,21 +30,19 @@
 
 #define RSSI_PIN      1    // Analog pin number
 
-// C++ style serial prints
-template<class T> inline Print &operator <<(Print &obj, T arg) { obj.print(arg); return obj; }
-
 // Objects
 Logger logger;    // Logs to microSD over SPI
 IMU imu;          // Inertial measurement unit - MPU6050 breakout
 GPS gps;          // Global positioning system - Adafruit GPS breakout
 
 /* For when we get the transceiver
-HardwareSerial &Xceiver = Serial2;  // Serial connection to the high power transceiver
-SerialCommand GROUND_cmdr(Xceiver); // Command and control from the ground
+ArduinoOutStream Xceiver(Serial2);   // Serial connection to the high power transceiver
+SerialCommand GROUND_cmdr(&Serial2); // Command and control from the ground
 */
 
-HardwareSerial &XBee = Serial3;     // Serial connection to the XBee radio
-SerialCommand XBEE_cmdr(XBee);      // Command and control over XBee
+//HardwareSerial &XBee = Serial3;       
+ArduinoOutStream XBee(Serial3);      // Serial connection to the XBee radio
+SerialCommand XBEE_cmdr(&Serial3);   // Command and control using XBee
 
 // Define threads
 ThreadController Controller = ThreadController();
@@ -68,8 +65,8 @@ void setup()
   pinMode(CUTDOWN_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
   
-  Serial.begin(115200);
-  XBee.begin(9600);
+  Serial.begin(115200);            // Debug interface
+  Serial3.begin(9600);             // XBee interface
 
   logger.initialize(MICROSD_CS, false);
   logger.append << setprecision(6) << "PESO Flight Computer Log File\n";
@@ -217,30 +214,31 @@ void XBEE_UNKNOWN_CMD()
   XBee << "Unknown command" << endl;
 }
 
-void print_imu(HardwareSerial *_serial)
+void print_imu(ArduinoOutStream os)
 {
-  _serial << "IMU at time " << imu.timestamp << endl;
-  _serial << "TEMP: " << (imu.temperature/(float)65536) << endl;
-  _serial << "QUAT: w=" << (imu.q[0]/(float)1073741824);
-  _serial << " x=" << (imu.q[1]/(float)1073741824);
-  _serial << " y=" << (imu.q[2]/(float)1073741824);
-  _serial << " z=" << (imu.q[3]/(float)1073741824) << endl;
-  _serial << "ACCL: x=" << (imu.aa[0]/(float)imu.aa_sens);
-  _serial << " y=" << (imu.aa[1]/(float)imu.aa_sens);
-  _serial << " z=" << (imu.aa[2]/(float)imu.aa_sens) << endl;
+  os << "IMU at time " << imu.timestamp << endl;
+  os << "TEMP: " << (imu.temperature/(float)65536) << endl;
+  os << "QUAT: w=" << (imu.q[0]/(float)1073741824);
+  os << " x=" << (imu.q[1]/(float)1073741824);
+  os << " y=" << (imu.q[2]/(float)1073741824);
+  os << " z=" << (imu.q[3]/(float)1073741824) << endl;
+  os << "ACCL: x=" << (imu.aa[0]/(float)imu.aa_sens);
+  os << " y=" << (imu.aa[1]/(float)imu.aa_sens);
+  os << " z=" << (imu.aa[2]/(float)imu.aa_sens) << endl;
 }
 
-void print_gps(HardwareSerial *_serial)
+void print_gps(ArduinoOutStream os)
 {
-  _serial << "GPS at time ";
-  _serial << setfill('0') << setw(2) << int(gps.hour) << ":";
-  _serial << setw(2) << int(gps.minute) << ":" << int(gps.seconds);
-  _serial << "." << setw(3) << int(gps.milliseconds) << " ";
-  _serial << setw(2) << int(gps.day) << "/";
-  _serial << setw(2) << int(gps.month) << "/20";
-  _serial << setw(2) << int(gps.year) << endl;
-  _serial << "LAT: " << gps.latitude << endl;
-  _serial << "LON: " << gps.longitude << endl;
-  _serial << "SPD: " << gps.speed << endl;
-  _serial << "ALT: " << gps.altitude << endl;
+  os << "GPS at time ";
+  os << setfill('0') << setw(2) << int(gps.hour) << ":";
+  os << setw(2) << int(gps.minute) << ":" << int(gps.seconds);
+  os << "." << setw(3) << int(gps.milliseconds) << " ";
+  os << setw(2) << int(gps.day) << "/";
+  os << setw(2) << int(gps.month) << "/20";
+  os << setw(2) << int(gps.year) << endl;
+  os << "LAT: " << gps.latitude << endl;
+  os << "LON: " << gps.longitude << endl;
+  os << "SPD: " << gps.speed << endl;
+  os << "ALT: " << gps.altitude << endl;
 }
+
