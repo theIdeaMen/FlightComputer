@@ -4,9 +4,9 @@
 
 #include <Wire.h>
 #include <I2Cdev.h>
-#include <VirtualWire.h>
+//#include <VirtualWire.h>
 
-//#include <SerialCommand.h>
+#include <SerialCommand.h>
 
 #include <PESO_Timer.h>
 
@@ -21,11 +21,13 @@
 #include <SoftwareSerial.h>
 #include <PESO_GPS.h>
 
-#include <PESO_Trigger.h>
-
 // Pin definitions
 #define IMU_INTRPT    36
 #define MICROSD_CS    33
+
+#define CUTDOWN_PIN   2
+#define SPARE_PIN     3
+#define LED_PIN       5
 
 #define RSSI_PIN      1    // Analog pin number
 
@@ -41,12 +43,20 @@ Thread IMU_thread = Thread();
 Thread GPS_thread = Thread();
 Thread COMMS_thread = Thread();
 Thread CUTDOWN_thread = Thread();
+Thread RUN_LED_thread = Thread();
+
+// Variables
+unsigned char led_off_count = 0;
+long max_altitude = 0;
 
 
 void setup()
 {
   // Power settle delay
   delay(100);
+  
+  pinMode(CUTDOWN_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
   
   Serial.begin(115200);
 
@@ -74,13 +84,16 @@ void setup()
   COMMS_thread.setInterval(50);
   
   CUTDOWN_thread.onRun(CUTDOWN_CB);
-  CUTDOWN_thread.setInterval(200);
+  CUTDOWN_thread.setInterval(1000);
+  
+  RUN_LED_thread.onRun(RUN_LED_CB);
+  RUN_LED_thread.setInterval(500);
   
   Controller.add(&IMU_thread);
   Controller.add(&GPS_thread);
   Controller.add(&COMMS_thread);
   Controller.add(&CUTDOWN_thread);
-
+  Controller.add(&RUN_LED_thread);
 }
 
 void loop()
@@ -121,6 +134,8 @@ void GPS_CB()
 {
   // Get data
   gps.update();
+  
+  if ((long)gps.altitude > max_altitude) { max_altitude = (long)gps.altitude; }
 
   // Append data type and time
   logger.append << "GPS," << millis() << ",";
@@ -151,5 +166,28 @@ void COMMS_CB()
 void CUTDOWN_CB()
 {
   Serial.println("CUTDOWN_CB: Begin");
+  digitalWrite(CUTDOWN_PIN, LOW);
+  if (max_altitude > logger.getTopAlt())
+  {
+    digitalWrite(CUTDOWN_PIN, HIGH);
+    
+    // Append cutdown message
+    logger.append << "CUTDOWN," << millis() << ",";
+    logger.append << "Altitude reached: " << max_altitude;
+    
+    logger.echo();
+    logger.recordln();
+  }
+}
+
+void RUN_LED_CB()
+{
+  Serial.println("RUN_LED_CB: Begin");
+  digitalWrite(LED_PIN, LOW);
+  if (led_off_count++ > 5)
+  {
+    digitalWrite(LED_PIN, HIGH);
+    led_off_count = 0;
+  }
 }
 
