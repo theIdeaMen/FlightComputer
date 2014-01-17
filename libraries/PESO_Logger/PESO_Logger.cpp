@@ -67,16 +67,6 @@ void Logger::recordln()
   append.seekp(0);
 }
 
-String Logger::getCallSign()
-{
-  return callSign;
-}
-
-long Logger::getTopAlt()
-{
-  return topAltitude;
-}
-
 void Logger::readConfigFile()
 {
   char line[20];

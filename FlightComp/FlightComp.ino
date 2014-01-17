@@ -121,6 +121,8 @@ void setup()
 
   // Configure ground control commands
   XBEE_cmdr.addCommand("GET",XBEE_GET_CMD);
+  XBEE_cmdr.addCommand("SET",XBEE_SET_CMD);
+  XBEE_cmdr.addCommand("?",XBEE_LIST_CMD);
   XBEE_cmdr.addDefaultHandler(XBEE_UNKNOWN_CMD);
 }
 
@@ -192,7 +194,7 @@ void GPS_CB()
 void CUTDOWN_CB()
 {
   digitalWrite(CUTDOWN_PIN, LOW);
-  if (max_altitude > logger.getTopAlt())
+  if (max_altitude > logger.topAltitude)
   {
     digitalWrite(CUTDOWN_PIN, HIGH);
     
@@ -233,11 +235,62 @@ void XBEE_GET_CMD()
   {
     print_gps(XBee);
   }
+
+  if (strcmp(arg, "ECHO") == 0)
+  {
+    XBee << "Echo is " << (logger.echoOn ? "on":"off") << endl;
+  }
+
+  if (strcmp(arg, "CLSGN") == 0)
+  {
+    XBee << "Call sign is " << logger.callSign << endl;
+  }
+
+  if (strcmp(arg, "TALT") == 0)
+  {
+    XBee << "Cutdown altitude is " << logger.topAltitude << endl;
+  }
+}
+
+void XBEE_SET_CMD()
+{
+  char *arg = XBEE_cmdr.next();
+
+  if (strcmp(arg, "ECHO") == 0)
+  {
+    arg = XBEE_cmdr.next();
+    if (strcmp(arg, "OFF") == 0)
+      logger.echoOn = false;
+    else if (strcmp(arg, "ON") == 0)
+      logger.echoOn = true;
+    XBee << "Echo is " << (logger.echoOn ? "on":"off") << endl;
+  }
+
+  if (strcmp(arg, "CLSGN") == 0)
+  {
+    logger.callSign = XBEE_cmdr.next();
+    XBee << "Call sign is " << logger.callSign << endl;
+  }
+
+  if (strcmp(arg, "TALT") == 0)
+  {
+    logger.topAltitude = atoi(XBEE_cmdr.next());
+    XBee << "Cutdown altitude is " << logger.topAltitude << endl;
+  }
+}
+
+void XBEE_LIST_CMD()
+{
+  XBee << "List of commands:\n";
+  XBee << "GET [IMU|GPS|ECHO|CLSGN|TALT]\n";
+  XBee << "SET [ECHO|CLSGN|TALT] {value}\n";
+  XBee << "Please use uppercase\n";
 }
 
 void XBEE_UNKNOWN_CMD()
 {
-  XBee << "Unknown command" << endl;
+  XBee << "Unknown command\n";
+  XBee << "Send \"?\" for a list of commands\n";
 }
 
 

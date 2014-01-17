@@ -13,16 +13,16 @@ class Logger
   
     char name[10];
     char buf[256];
-    
-    // config options
-    bool echoOn;             // Echo log to Serial
-    String callSign;         // The HAM call sign using the command link radio
-    long topAltitude;        // The altitude at which there should be a cutdown in meters
 
     void readConfigFile();
   
   public:
     obufstream append;
+
+    // config options
+    bool echoOn;             // Echo log to Serial
+    String callSign;         // The HAM call sign using the command link radio
+    long topAltitude;        // The altitude at which there should be a cutdown in meters
     
     #define error(s) sd.errorHalt_P(PSTR(s))
     
@@ -32,8 +32,6 @@ class Logger
     void initialize(uint8_t chip_select_pin, bool half_speed);
     void record();
     void recordln();
-    String getCallSign();
-    long getTopAlt();
 };
 
 #endif __PESO_LOGGER__
