@@ -37,6 +37,8 @@ Logger logger;    // Logs to microSD over SPI
 IMU imu;          // Inertial measurement unit - MPU6050 breakout
 GPS gps;          // Global positioning system - Adafruit GPS breakout
 
+HardwareSerial &XBee = Serial3;    // Serial connection to the XBee radio
+
 // Define threads
 ThreadController Controller = ThreadController();
 Thread IMU_thread = Thread();
@@ -59,6 +61,7 @@ void setup()
   pinMode(LED_PIN, OUTPUT);
   
   Serial.begin(115200);
+  XBee.begin(9600);
 
   logger.initialize(MICROSD_CS, false);
   logger.append << setprecision(6) << "PESO Flight Computer Log File\n";
