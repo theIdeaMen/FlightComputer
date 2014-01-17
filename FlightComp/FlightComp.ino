@@ -31,13 +31,21 @@
 
 #define RSSI_PIN      1    // Analog pin number
 
+// C++ style serial prints
+template<class T> inline Print &operator <<(Print &obj, T arg) { obj.print(arg); return obj; }
 
 // Objects
 Logger logger;    // Logs to microSD over SPI
 IMU imu;          // Inertial measurement unit - MPU6050 breakout
 GPS gps;          // Global positioning system - Adafruit GPS breakout
 
-HardwareSerial &XBee = Serial3;    // Serial connection to the XBee radio
+/* For when we get the transceiver
+HardwareSerial &Xceiver = Serial2;  // Serial connection to the high power transceiver
+SerialCommand GROUND_cmdr(Xceiver); // Command and control from the ground
+*/
+
+HardwareSerial &XBee = Serial3;     // Serial connection to the XBee radio
+SerialCommand XBEE_cmdr(XBee);      // Command and control over XBee
 
 // Define threads
 ThreadController Controller = ThreadController();
@@ -81,22 +89,22 @@ void setup()
   IMU_thread.setInterval(5);
   
   GPS_thread.onRun(GPS_CB);
-  GPS_thread.setInterval(100);
-  
-  COMMS_thread.onRun(COMMS_CB);
-  COMMS_thread.setInterval(50);
+  GPS_thread.setInterval(1000);
   
   CUTDOWN_thread.onRun(CUTDOWN_CB);
-  CUTDOWN_thread.setInterval(1000);
+  CUTDOWN_thread.setInterval(2000);
   
   RUN_LED_thread.onRun(RUN_LED_CB);
   RUN_LED_thread.setInterval(500);
   
   Controller.add(&IMU_thread);
   Controller.add(&GPS_thread);
-  Controller.add(&COMMS_thread);
   Controller.add(&CUTDOWN_thread);
   Controller.add(&RUN_LED_thread);
+
+  // Configure ground control commands
+  XBEE_cmdr.addCommand("GET",XBEE_GET_CMD);
+  XBEE_cmdr.addDefaultHandler(XBEE_UNKNOWN_CMD);
 }
 
 void loop()
@@ -105,7 +113,7 @@ void loop()
   Controller.run();
 
   // Check for command from ground control
-  delay(1);
+  XBEE_cmdr.readSerial();
 }
 
 
@@ -161,11 +169,6 @@ void GPS_CB()
   logger.recordln();
 }
 
-void COMMS_CB()
-{
-  Serial.println("COMMS_CB: Begin");
-}
-
 void CUTDOWN_CB()
 {
   Serial.println("CUTDOWN_CB: Begin");
@@ -194,3 +197,50 @@ void RUN_LED_CB()
   }
 }
 
+void XBEE_GET_CMD()
+{
+  char *arg = XBEE_cmdr.next();
+
+  if (strcmp(arg, "IMU") == 0)
+  {
+    print_imu(XBee);
+  }
+
+  if (strcmp(arg, "GPS") == 0)
+  {
+    print_gps(XBee);
+  }
+}
+
+void XBEE_UNKNOWN_CMD()
+{
+  XBee << "Unknown command" << endl;
+}
+
+void print_imu(HardwareSerial *_serial)
+{
+  _serial << "IMU at time " << imu.timestamp << endl;
+  _serial << "TEMP: " << (imu.temperature/(float)65536) << endl;
+  _serial << "QUAT: w=" << (imu.q[0]/(float)1073741824);
+  _serial << " x=" << (imu.q[1]/(float)1073741824);
+  _serial << " y=" << (imu.q[2]/(float)1073741824);
+  _serial << " z=" << (imu.q[3]/(float)1073741824) << endl;
+  _serial << "ACCL: x=" << (imu.aa[0]/(float)imu.aa_sens);
+  _serial << " y=" << (imu.aa[1]/(float)imu.aa_sens);
+  _serial << " z=" << (imu.aa[2]/(float)imu.aa_sens) << endl;
+}
+
+void print_gps(HardwareSerial *_serial)
+{
+  _serial << "GPS at time ";
+  _serial << setfill('0') << setw(2) << int(gps.hour) << ":";
+  _serial << setw(2) << int(gps.minute) << ":" << int(gps.seconds);
+  _serial << "." << setw(3) << int(gps.milliseconds) << " ";
+  _serial << setw(2) << int(gps.day) << "/";
+  _serial << setw(2) << int(gps.month) << "/20";
+  _serial << setw(2) << int(gps.year) << endl;
+  _serial << "LAT: " << gps.latitude << endl;
+  _serial << "LON: " << gps.longitude << endl;
+  _serial << "SPD: " << gps.speed << endl;
+  _serial << "ALT: " << gps.altitude << endl;
+}

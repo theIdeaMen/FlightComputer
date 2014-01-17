@@ -12,7 +12,7 @@ void GPS::initialize()
   data.begin(9600);
   
   data.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  data.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);
+  data.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
 }
 
 void GPS::update()
