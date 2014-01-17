@@ -60,7 +60,6 @@ ArduinoOutStream Xceiver(Serial2);   // Serial connection to the high power tran
 SerialCommand GROUND_cmdr(&Serial2); // Command and control from the ground
 */
 
-//HardwareSerial &XBee = Serial3;       
 ArduinoOutStream XBee(Serial3);      // Serial connection to the XBee radio
 SerialCommand XBEE_cmdr(&Serial3);   // Command and control using XBee
 
@@ -256,6 +255,7 @@ void XBEE_SET_CMD()
 {
   char *arg = XBEE_cmdr.next();
 
+  // Set weather the logger should echo to Serial
   if (strcmp(arg, "ECHO") == 0)
   {
     arg = XBEE_cmdr.next();
@@ -266,12 +266,14 @@ void XBEE_SET_CMD()
     XBee << "Echo is " << (logger.echoOn ? "on":"off") << endl;
   }
 
+  // Set the call sign for using the high power transceiver
   if (strcmp(arg, "CLSGN") == 0)
   {
     logger.callSign = XBEE_cmdr.next();
     XBee << "Call sign is " << logger.callSign << endl;
   }
 
+  // Set the altitude at which a cutdown will be issued
   if (strcmp(arg, "TALT") == 0)
   {
     logger.topAltitude = atoi(XBEE_cmdr.next());
