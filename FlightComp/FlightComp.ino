@@ -1,3 +1,23 @@
+/*********************************************************************
+  PESO Rockoon Flight Computer
+  Arduino MEGA Firmware
+  For use with V1.0 of the Flight Computer hardware
+
+  Copyright (C) 2014 
+  by Physics and Engineering Student Organization
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  <http://www.gnu.org/licenses/>.
+**********************************************************************/
 // Includes
 #include <Thread.h>
 #include <ThreadController.h>
@@ -114,7 +134,9 @@ void loop()
 }
 
 
-// Thread callbacks
+/*****************
+ Thread callbacks
+******************/
 
 void IMU_CB()
 {
@@ -143,6 +165,7 @@ void GPS_CB()
   // Get data
   gps.update();
   
+  // Save max altitude
   if ((long)gps.altitude > max_altitude) { max_altitude = (long)gps.altitude; }
 
   // Append data type and time
@@ -168,7 +191,6 @@ void GPS_CB()
 
 void CUTDOWN_CB()
 {
-  Serial.println("CUTDOWN_CB: Begin");
   digitalWrite(CUTDOWN_PIN, LOW);
   if (max_altitude > logger.getTopAlt())
   {
@@ -185,7 +207,6 @@ void CUTDOWN_CB()
 
 void RUN_LED_CB()
 {
-  Serial.println("RUN_LED_CB: Begin");
   digitalWrite(LED_PIN, LOW);
   if (led_off_count++ > 5)
   {
@@ -193,6 +214,11 @@ void RUN_LED_CB()
     led_off_count = 0;
   }
 }
+
+
+/*************************
+ Serial command callbacks
+**************************/
 
 void XBEE_GET_CMD()
 {
@@ -213,6 +239,11 @@ void XBEE_UNKNOWN_CMD()
 {
   XBee << "Unknown command" << endl;
 }
+
+
+/*************************
+ Utility functions
+**************************/
 
 void print_imu(ArduinoOutStream os)
 {
@@ -241,4 +272,3 @@ void print_gps(ArduinoOutStream os)
   os << "SPD: " << gps.speed << endl;
   os << "ALT: " << gps.altitude << endl;
 }
-
