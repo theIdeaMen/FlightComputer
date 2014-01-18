@@ -269,7 +269,7 @@ void XBEE_SET_CMD()
   // Set the call sign for using the high power transceiver
   if (strcmp(arg, "CLSGN") == 0)
   {
-    logger.callSign = XBEE_cmdr.next();
+    sprintf(logger.callSign, XBEE_cmdr.next());
     XBee << "Call sign is " << logger.callSign << endl;
   }
 
@@ -284,8 +284,8 @@ void XBEE_SET_CMD()
 void XBEE_LIST_CMD()
 {
   XBee << "List of commands:\n";
-  XBee << "GET [IMU|GPS|ECHO|CLSGN|TALT]\n";
-  XBee << "SET [ECHO|CLSGN|TALT] {value}\n";
+  XBee << "GET [IMU|GPS|ECHO|CLSGN|TALT]\\r\n";
+  XBee << "SET [ECHO|CLSGN|TALT] {value}\\r\n";
   XBee << "Please use uppercase\n";
 }
 
