@@ -4,7 +4,7 @@ Logger::Logger()
 {
   // Initialize config options
   echoOn = true;
-  callSign = "KD0UFY";
+  sprintf(callSign, "KPESO");
   topAltitude = 29000;
 }
 
@@ -88,7 +88,7 @@ void Logger::readConfigFile()
 
     if (strcmp(prop, "CALLSIGN") == 0)
     {
-      callSign = val;
+      sprintf(callSign, val);
     }
 
     if (strcmp(prop, "TOPALT") == 0)

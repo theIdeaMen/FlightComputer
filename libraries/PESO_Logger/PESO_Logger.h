@@ -21,7 +21,7 @@ class Logger
 
     // config options
     bool echoOn;             // Echo log to Serial
-    String callSign;         // The HAM call sign using the command link radio
+    char callSign[8];        // The HAM call sign using the command link radio
     long topAltitude;        // The altitude at which there should be a cutdown in meters
     
     #define error(s) sd.errorHalt_P(PSTR(s))
