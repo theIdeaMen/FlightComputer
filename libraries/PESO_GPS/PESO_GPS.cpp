@@ -13,10 +13,16 @@ void GPS::initialize()
   
   data.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   data.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+  //data.sendCommand(PGCMD_ANTENNA);
 }
 
 void GPS::update()
 {
+  char c = data.read();
+  // if you want to debug, this is a good time to do it!
+  //if (c)
+  //  Serial.write(c);
+    
   if (data.newNMEAreceived()) data.parse(data.lastNMEA());
 
   if (data.fix)

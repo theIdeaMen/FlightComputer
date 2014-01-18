@@ -88,11 +88,11 @@ void setup()
   Serial3.begin(9600);             // XBee interface
 
   logger.initialize(MICROSD_CS, false);
-  logger.append << setprecision(6) << "PESO Flight Computer Log File\n";
-  logger.append << "IMU,timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z\n";
-  logger.append << "GPS,timestamp,time,date,lat,lon,speed,alt\n";
-  logger.append << "COMMS,timestamp,rssi,message\n";
-  logger.append << "CUTDOWN,timestamp,message";
+  logger.append << setprecision(6) << F("PESO Flight Computer Log File\n");
+  logger.append << F("IMU,timestamp,temperature,q_w,q_x,q_y,q_z,aa_x,aa_y,aa_z\n");
+  logger.append << F("GPS,timestamp,time,date,lat,lon,speed,alt\n");
+  logger.append << F("COMMS,timestamp,rssi,message\n");
+  logger.append << F("CUTDOWN,timestamp,message");
   logger.echo();
   logger.recordln();
 
@@ -132,6 +132,9 @@ void loop()
 
   // Check for command from ground control
   XBEE_cmdr.readSerial();
+  
+  // Check for GPS data
+  gps.update();
 }
 
 
@@ -162,10 +165,7 @@ void IMU_CB()
 }
   
 void GPS_CB()
-{
-  // Get data
-  gps.update();
-  
+{ 
   // Save max altitude
   if ((long)gps.altitude > max_altitude) { max_altitude = (long)gps.altitude; }
 
@@ -175,7 +175,7 @@ void GPS_CB()
   // Append GPS data
   logger.append << setfill('0') << setw(2) << int(gps.hour) << ":";
   logger.append << setw(2) << int(gps.minute) << ":";
-  logger.append << setw(2) << int(gps.seconds) << "." << setw(3) << int(gps.milliseconds) << ",";
+  logger.append << setw(2) << int(gps.seconds) << ",";
   
   logger.append << setw(2) << int(gps.day) << "/";
   logger.append << setw(2) << int(gps.month) << "/20";
@@ -283,16 +283,16 @@ void XBEE_SET_CMD()
 
 void XBEE_LIST_CMD()
 {
-  XBee << "List of commands:\n";
-  XBee << "GET [IMU|GPS|ECHO|CLSGN|TALT]\\r\n";
-  XBee << "SET [ECHO|CLSGN|TALT] {value}\\r\n";
-  XBee << "Please use uppercase\n";
+  XBee << F("List of commands:\n");
+  XBee << F("GET [IMU|GPS|ECHO|CLSGN|TALT]\\r\n");
+  XBee << F("SET [ECHO|CLSGN|TALT] {value}\\r\n");
+  XBee << F("Please use uppercase\n");
 }
 
 void XBEE_UNKNOWN_CMD()
 {
-  XBee << "Unknown command\n";
-  XBee << "Send \"?\" for a list of commands\n";
+  XBee << F("Unknown command\n");
+  XBee << F("Send \"?\" for a list of commands\n");
 }
 
 
@@ -303,7 +303,7 @@ void XBEE_UNKNOWN_CMD()
 void print_imu(ArduinoOutStream os)
 {
   os << "IMU at time " << imu.timestamp << endl;
-  os << "TEMP: " << (imu.temperature/(float)65536) << endl;
+  os << "TEMP: " << setprecision(6) << (imu.temperature/(float)65536) << endl;
   os << "QUAT: w=" << (imu.q[0]/(float)1073741824);
   os << " x=" << (imu.q[1]/(float)1073741824);
   os << " y=" << (imu.q[2]/(float)1073741824);
@@ -318,12 +318,11 @@ void print_gps(ArduinoOutStream os)
   os << "GPS at time ";
   os << setfill('0') << setw(2) << int(gps.hour) << ":";
   os << setw(2) << int(gps.minute) << ":" << int(gps.seconds);
-  os << "." << setw(3) << int(gps.milliseconds) << " ";
-  os << setw(2) << int(gps.day) << "/";
+  os << " " << setw(2) << int(gps.day) << "/";
   os << setw(2) << int(gps.month) << "/20";
   os << setw(2) << int(gps.year) << endl;
-  os << "LAT: " << gps.latitude << endl;
+  os << "LAT: " << setprecision(6) << gps.latitude << endl;
   os << "LON: " << gps.longitude << endl;
-  os << "SPD: " << gps.speed << endl;
+  os << "SPD: " << setprecision(2) << gps.speed << endl;
   os << "ALT: " << gps.altitude << endl;
 }

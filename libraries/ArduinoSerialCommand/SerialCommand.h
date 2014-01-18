@@ -70,8 +70,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #define MAXSERIALCOMMANDS	10
 #define MAXDELIMETER 2
 
-#define SERIALCOMMANDDEBUG 1
-//#undef SERIALCOMMANDDEBUG      // Comment this out to run the library in debug mode (verbose messages)
+//#define SERIALCOMMANDDEBUG 1
+#undef SERIALCOMMANDDEBUG      // Comment this out to run the library in debug mode (verbose messages)
 
 class SerialCommand
 {
