@@ -48,6 +48,8 @@
 #define SPARE_PIN     3
 #define LED_PIN       5
 
+#define CMD_RX_EN     34
+#define CMD_TX_EN     35
 #define RSSI_PIN      1    // Analog pin number
 
 // Objects
@@ -55,10 +57,9 @@ Logger logger;    // Logs to microSD over SPI
 IMU imu;          // Inertial measurement unit - MPU6050 breakout
 GPS gps;          // Global positioning system - Adafruit GPS breakout
 
-/* For when we get the transceiver
+// Ground control transceiver
 ArduinoOutStream Xceiver(Serial2);   // Serial connection to the high power transceiver
 SerialCommand GROUND_cmdr(&Serial2); // Command and control from the ground
-*/
 
 ArduinoOutStream XBee(Serial3);      // Serial connection to the XBee radio
 SerialCommand XBEE_cmdr(&Serial3);   // Command and control using XBee
@@ -84,7 +85,15 @@ void setup()
   pinMode(CUTDOWN_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
   
+  pinMode(CMD_TX_EN, OUTPUT);
+  pinMode(CMD_RX_EN, OUTPUT);
+  
+  // Enable receive
+  digitalWrite(CMD_TX_EN, HIGH);
+  digitalWrite(CMD_RX_EN, LOW);
+  
   Serial.begin(115200);            // Debug interface
+  Serial2.begin(9600);             // Ground control transceiver
   Serial3.begin(9600);             // XBee interface
 
   logger.initialize(MICROSD_CS, false);
@@ -123,6 +132,13 @@ void setup()
   XBEE_cmdr.addCommand("SET",XBEE_SET_CMD);
   XBEE_cmdr.addCommand("?",XBEE_LIST_CMD);
   XBEE_cmdr.addDefaultHandler(XBEE_UNKNOWN_CMD);
+  
+  GROUND_cmdr.addCommand("GET",GROUND_GET_CMD);
+  GROUND_cmdr.addCommand("SET",GROUND_SET_CMD);
+  GROUND_cmdr.addCommand("?",GROUND_LIST_CMD);
+  GROUND_cmdr.addDefaultHandler(GROUND_UNKNOWN_CMD);
+  
+  logger.echoOn = false;
 }
 
 void loop()
@@ -135,6 +151,8 @@ void loop()
   
   // Check for GPS data
   gps.update();
+  
+  Xceiver << "TESTING" << endl;
 }
 
 
@@ -293,6 +311,125 @@ void XBEE_UNKNOWN_CMD()
 {
   XBee << F("Unknown command\n");
   XBee << F("Send \"?\" for a list of commands\n");
+}
+
+////////////
+// GROUND
+void GROUND_GET_CMD()
+{
+  char *arg = GROUND_cmdr.next();
+  int tmpRSSI = analogRead(RSSI_PIN);
+  
+  // Enable transmit
+  digitalWrite(CMD_RX_EN, HIGH);
+  digitalWrite(CMD_TX_EN, LOW);
+
+  if (strcmp(arg, "IMU") == 0)
+  {
+    print_imu(Xceiver);
+  }
+
+  if (strcmp(arg, "GPS") == 0)
+  {
+    print_gps(Xceiver);
+  }
+
+  if (strcmp(arg, "ECHO") == 0)
+  {
+    Xceiver << "Echo is " << (logger.echoOn ? "on":"off") << endl;
+  }
+
+  if (strcmp(arg, "CLSGN") == 0)
+  {
+    Xceiver << "Call sign is " << logger.callSign << endl;
+  }
+
+  if (strcmp(arg, "TALT") == 0)
+  {
+    Xceiver << "Cutdown altitude is " << logger.topAltitude << endl;
+  }
+  Xceiver << "RSSI: " << tmpRSSI << endl;
+  
+  // Enable receive
+  digitalWrite(CMD_TX_EN, HIGH);
+  digitalWrite(CMD_RX_EN, LOW);
+}
+
+void GROUND_SET_CMD()
+{
+  char *arg = GROUND_cmdr.next();
+  int tmpRSSI = analogRead(RSSI_PIN);
+  
+  // Enable transmit
+  digitalWrite(CMD_RX_EN, HIGH);
+  digitalWrite(CMD_TX_EN, LOW);
+
+  // Set weather the logger should echo to Serial
+  if (strcmp(arg, "ECHO") == 0)
+  {
+    arg = GROUND_cmdr.next();
+  
+    if (strcmp(arg, "OFF") == 0)
+      logger.echoOn = false;
+    else if (strcmp(arg, "ON") == 0)
+      logger.echoOn = true;
+    Xceiver << "Echo is " << (logger.echoOn ? "on":"off") << endl;
+  }
+
+  // Set the call sign for using the high power transceiver
+  if (strcmp(arg, "CLSGN") == 0)
+  {
+    sprintf(logger.callSign, GROUND_cmdr.next());
+    Xceiver << "Call sign is " << logger.callSign << endl;
+  }
+
+  // Set the altitude at which a cutdown will be issued
+  if (strcmp(arg, "TALT") == 0)
+  {
+    logger.topAltitude = atoi(GROUND_cmdr.next());
+    Xceiver << "Cutdown altitude is " << logger.topAltitude << endl;
+  }
+  Xceiver << "RSSI: " << tmpRSSI << endl;
+  
+  // Enable receive
+  digitalWrite(CMD_TX_EN, HIGH);
+  digitalWrite(CMD_RX_EN, LOW);
+}
+
+void GROUND_LIST_CMD()
+{
+  int tmpRSSI = analogRead(RSSI_PIN);
+  
+  // Enable transmit
+  digitalWrite(CMD_RX_EN, HIGH);
+  digitalWrite(CMD_TX_EN, LOW);
+    
+  Xceiver << F("List of commands:\n");
+  Xceiver << F("GET [IMU|GPS|ECHO|CLSGN|TALT]\\r\n");
+  Xceiver << F("SET [ECHO|CLSGN|TALT] {value}\\r\n");
+  Xceiver << F("Please use uppercase\n");
+  Xceiver << "RSSI: " << tmpRSSI << endl;
+  
+  // Enable receive
+  digitalWrite(CMD_TX_EN, HIGH);
+  digitalWrite(CMD_RX_EN, LOW);
+}
+
+void GROUND_UNKNOWN_CMD()
+{
+  int tmpRSSI = analogRead(RSSI_PIN);
+  
+  // Enable transmit
+  digitalWrite(CMD_RX_EN, HIGH);
+  digitalWrite(CMD_TX_EN, LOW);
+  
+  Xceiver << F("Unknown command\n");
+  Xceiver << F("Send \"?\" for a list of commands\n");
+  Xceiver << "RSSI: " << tmpRSSI << endl;
+  
+  // Enable receive
+  digitalWrite(CMD_TX_EN, HIGH);
+  digitalWrite(CMD_RX_EN, LOW);
 }
 
 
