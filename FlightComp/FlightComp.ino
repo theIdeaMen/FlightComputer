@@ -93,7 +93,7 @@ void setup()
   digitalWrite(CMD_RX_EN, LOW);
   
   Serial.begin(115200);            // Debug interface
-  Serial2.begin(9600);             // Ground control transceiver
+  Serial2.begin(1200);             // Ground control transceiver
   Serial3.begin(9600);             // XBee interface
 
   logger.initialize(MICROSD_CS, false);
@@ -136,7 +136,7 @@ void setup()
   GROUND_cmdr.addCommand("GET",GROUND_GET_CMD);
   GROUND_cmdr.addCommand("SET",GROUND_SET_CMD);
   GROUND_cmdr.addCommand("?",GROUND_LIST_CMD);
-  GROUND_cmdr.addDefaultHandler(GROUND_UNKNOWN_CMD);
+  //GROUND_cmdr.addDefaultHandler(GROUND_UNKNOWN_CMD);
   
   logger.echoOn = false;
 }
@@ -148,11 +148,16 @@ void loop()
 
   // Check for command from ground control
   XBEE_cmdr.readSerial();
+  //GROUND_cmdr.readSerial();
   
   // Check for GPS data
   gps.update();
   
-  Xceiver << "TESTING" << endl;
+  if (Serial2.available())
+  {
+    char c = Serial2.read();
+    Serial.print(c);
+  }
 }
 
 
@@ -323,7 +328,11 @@ void GROUND_GET_CMD()
   // Enable transmit
   digitalWrite(CMD_RX_EN, HIGH);
   digitalWrite(CMD_TX_EN, LOW);
+  delay(8);
 
+  // Transmit callsign
+  Xceiver << logger.callSign << endl;
+  
   if (strcmp(arg, "IMU") == 0)
   {
     print_imu(Xceiver);
@@ -349,6 +358,7 @@ void GROUND_GET_CMD()
     Xceiver << "Cutdown altitude is " << logger.topAltitude << endl;
   }
   Xceiver << "RSSI: " << tmpRSSI << endl;
+  Xceiver << 0x04;  // EOT
   
   // Enable receive
   digitalWrite(CMD_TX_EN, HIGH);
@@ -363,6 +373,10 @@ void GROUND_SET_CMD()
   // Enable transmit
   digitalWrite(CMD_RX_EN, HIGH);
   digitalWrite(CMD_TX_EN, LOW);
+  delay(8);
+  
+  // Transmit callsign
+  Xceiver << logger.callSign << endl;
 
   // Set weather the logger should echo to Serial
   if (strcmp(arg, "ECHO") == 0)
@@ -390,6 +404,7 @@ void GROUND_SET_CMD()
     Xceiver << "Cutdown altitude is " << logger.topAltitude << endl;
   }
   Xceiver << "RSSI: " << tmpRSSI << endl;
+  Xceiver << 0x04;  // EOT
   
   // Enable receive
   digitalWrite(CMD_TX_EN, HIGH);
@@ -403,12 +418,17 @@ void GROUND_LIST_CMD()
   // Enable transmit
   digitalWrite(CMD_RX_EN, HIGH);
   digitalWrite(CMD_TX_EN, LOW);
-    
+  delay(8);
+  
+  // Transmit callsign
+  Xceiver << logger.callSign << endl;
+  
   Xceiver << F("List of commands:\n");
   Xceiver << F("GET [IMU|GPS|ECHO|CLSGN|TALT]\\r\n");
   Xceiver << F("SET [ECHO|CLSGN|TALT] {value}\\r\n");
   Xceiver << F("Please use uppercase\n");
   Xceiver << "RSSI: " << tmpRSSI << endl;
+  Xceiver << 0x04;  // EOT
   
   // Enable receive
   digitalWrite(CMD_TX_EN, HIGH);
@@ -422,10 +442,15 @@ void GROUND_UNKNOWN_CMD()
   // Enable transmit
   digitalWrite(CMD_RX_EN, HIGH);
   digitalWrite(CMD_TX_EN, LOW);
+  delay(8);
+  
+  // Transmit callsign
+  Xceiver << logger.callSign << endl;
   
   Xceiver << F("Unknown command\n");
   Xceiver << F("Send \"?\" for a list of commands\n");
   Xceiver << "RSSI: " << tmpRSSI << endl;
+  Xceiver << 0x04;  // EOT
   
   // Enable receive
   digitalWrite(CMD_TX_EN, HIGH);
