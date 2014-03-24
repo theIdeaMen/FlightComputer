@@ -160,7 +160,6 @@ void loop()
 /*****************
  Thread callbacks
 ******************/
-
 void IMU_CB()
 {
   if (digitalRead(IMU_INTRPT) == LOW)
@@ -318,16 +317,21 @@ void XBEE_UNKNOWN_CMD()
 void GROUND_CMD()
 {
   int tmpRSSI;
-  uint8_t buf[VW_MAX_MESSAGE_LEN];
+  char buf[VW_MAX_MESSAGE_LEN];
   uint8_t buflen = VW_MAX_MESSAGE_LEN;
 
   if (vw_have_message())
   {
     tmpRSSI = analogRead(RSSI_PIN);
-    if (vw_get_message(buf, &buflen)) // Non-blocking
-    {
-      Serial.println(&buf);
-      if (strstr(buf, "CMD GET GPS") != null)
+    if (vw_get_message((uint8_t*)buf, &buflen)) // Non-blocking
+    { 
+      buf[buflen] = '\0';
+
+      logger.append << "COMMS," << millis() << tmpRSSI << buf << endl;
+      logger.echo();
+      logger.recordln();
+      
+      if (strstr(buf, "CMD GET GPS"))
       {
         digitalWrite(CMD_RX_EN, HIGH);
         
@@ -350,8 +354,6 @@ void GROUND_CMD()
         buflen = sprintf(buf, "RSSI: %d\n", tmpRSSI);
         vw_send((uint8_t *)buf, buflen);
         vw_wait_tx(); // Wait until the whole message is gone
-        
-        digitalWrite(receive_en_pin, LOW);
       }
     }
   }
