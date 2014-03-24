@@ -200,6 +200,8 @@
 // an ISR
 extern "C"
 {
+    extern void vw_set_rssi_pin(uint8_t pin);
+    
     /// Set the digital IO pin to be for transmit data. 
     /// This pin will only be accessed if
     /// the transmitter is enabled
@@ -274,7 +276,7 @@ extern "C"
     /// \param[in] buf Pointer to location to save the read data (must be at least *len bytes.
     /// \param[in,out] len Available space in buf. Will be set to the actual number of octets read
     /// \return true if there was a message and the checksum was good
-    extern uint8_t vw_get_message(uint8_t* buf, uint8_t* len);
+    extern uint8_t vw_get_message(uint8_t* buf, uint8_t* len, uint16_t* rssi);
 }
 
 /// @example client.pde

@@ -316,18 +316,19 @@ void XBEE_UNKNOWN_CMD()
 
 void GROUND_CMD()
 {
-  int tmpRSSI;
+  uint16_t tmpRSSI;
   char buf[VW_MAX_MESSAGE_LEN];
+  char tmpBuf[VW_MAX_MESSAGE_LEN];
   uint8_t buflen = VW_MAX_MESSAGE_LEN;
 
   if (vw_have_message())
   {
-    tmpRSSI = analogRead(RSSI_PIN);
-    if (vw_get_message((uint8_t*)buf, &buflen)) // Non-blocking
+    //tmpRSSI = analogRead(RSSI_PIN);
+    if (vw_get_message((uint8_t*)buf, &buflen, &tmpRSSI)) // Non-blocking
     { 
       buf[buflen] = '\0';
 
-      logger.append << "COMMS," << millis() << tmpRSSI << buf << endl;
+      logger.append << "COMMS," << millis() << "," << tmpRSSI << "," << buf << endl;
       logger.echo();
       logger.recordln();
       
@@ -335,19 +336,19 @@ void GROUND_CMD()
       {
         digitalWrite(CMD_RX_EN, HIGH);
         
-        buflen = sprintf(buf, "LAT: %f\n", gps.latitude);
+        buflen = sprintf(buf, "LAT: %s\n", ftoa(tmpBuf,gps.latitude,6));
         vw_send((uint8_t *)buf, buflen);
         vw_wait_tx(); // Wait until the whole message is gone
 
-        buflen = sprintf(buf, "LON: %f\n", gps.longitude);
+        buflen = sprintf(buf, "LON: %s\n", ftoa(tmpBuf,gps.longitude,6));
         vw_send((uint8_t *)buf, buflen);
         vw_wait_tx(); // Wait until the whole message is gone
         
-        buflen = sprintf(buf, "SPD: %f.2\n", gps.speed);
+        buflen = sprintf(buf, "SPD: %s\n", ftoa(tmpBuf,gps.speed,2));
         vw_send((uint8_t *)buf, buflen);
         vw_wait_tx(); // Wait until the whole message is gone
         
-        buflen = sprintf(buf, "ALT: %f.2\n", gps.altitude);
+        buflen = sprintf(buf, "ALT: %s\n", ftoa(tmpBuf,gps.altitude,2));
         vw_send((uint8_t *)buf, buflen);
         vw_wait_tx(); // Wait until the whole message is gone
         
@@ -391,4 +392,18 @@ void print_gps(ArduinoOutStream os)
   os << "LON: " << gps.longitude << endl;
   os << "SPD: " << setprecision(2) << gps.speed << endl;
   os << "ALT: " << gps.altitude << endl;
+}
+
+char *ftoa(char *a, double f, int precision)
+{
+  long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
+  
+  char *ret = a;
+  long heiltal = (long)f;
+  itoa(heiltal, a, 10);
+  while (*a != '\0') a++;
+  *a++ = '.';
+  long desimal = abs((long)((f - heiltal) * p[precision]));
+  itoa(desimal, a, 10);
+  return ret;
 }

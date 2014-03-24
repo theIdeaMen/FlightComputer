@@ -31,6 +31,9 @@
 #include "VirtualWire.h"
 #include <util/crc16.h>
 
+// RSSI (Griffin Adams, KU PESO)
+static uint16_t vw_rssi = 0;
+static uint8_t vw_rssi_pin = 1;
 
 static uint8_t vw_tx_buf[(VW_MAX_MESSAGE_LEN * 2) + VW_HEADER_LEN] 
      = {0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x38, 0x2c};
@@ -147,6 +150,12 @@ uint8_t vw_symbol_6to4(uint8_t symbol)
     return 0; // Not found
 }
 
+// Set the output pin number for analog RSSI (Griffin Adams, KU PESO)
+void vw_set_rssi_pin(uint8_t pin)
+{
+    vw_rssi_pin = pin;
+}
+
 // Set the output pin number for transmitter data
 void vw_set_tx_pin(uint8_t pin)
 {
@@ -247,6 +256,7 @@ void vw_pll()
 		    vw_rx_active = false;
 		    vw_rx_good++;
 		    vw_rx_done = true; // Better come get it before the next one starts
+        vw_rssi = analogRead(vw_rssi_pin); // Read RSSI from Xceiver (Griffin Adams, KU PESO)
 		}
 		vw_rx_bit_count = 0;
 	    }
@@ -552,7 +562,7 @@ uint8_t vw_have_message()
 // Get the last message received (without byte count or FCS)
 // Copy at most *len bytes, set *len to the actual number copied
 // Return true if there is a message and the FCS is OK
-uint8_t vw_get_message(uint8_t* buf, uint8_t* len)
+uint8_t vw_get_message(uint8_t* buf, uint8_t* len, uint16_t* rssi)
 {
     uint8_t rxlen;
     
@@ -563,6 +573,10 @@ uint8_t vw_get_message(uint8_t* buf, uint8_t* len)
     // Wait until vw_rx_done is set before reading vw_rx_len
     // then remove bytecount and FCS
     rxlen = vw_rx_len - 3;
+    
+    // Send back RSSI (Griffin Adams, KU PESO)
+    *rssi = vw_rssi;
+    vw_rssi = 0;
     
     // Copy message (good or bad)
     if (*len > rxlen)
