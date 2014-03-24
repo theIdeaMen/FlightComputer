@@ -74,7 +74,7 @@ Thread RUN_LED_thread = Thread();
 // Variables
 unsigned char led_off_count = 0;
 long max_altitude = 0;
-
+boolean cutdownCMD = false;
 
 void setup()
 {
@@ -211,7 +211,7 @@ void GPS_CB()
 void CUTDOWN_CB()
 {
   digitalWrite(CUTDOWN_PIN, LOW);
-  if (max_altitude > logger.topAltitude)
+  if (max_altitude > logger.topAltitude || cutdownCMD)
   {
     digitalWrite(CUTDOWN_PIN, HIGH);
     
@@ -221,6 +221,8 @@ void CUTDOWN_CB()
     
     logger.echo();
     logger.recordln();
+    
+    cutdownCMD = false;
   }
 }
 
@@ -314,6 +316,9 @@ void XBEE_UNKNOWN_CMD()
 }
 
 
+/*************************
+ Transceiver commands
+**************************/
 void GROUND_CMD()
 {
   uint16_t tmpRSSI;
@@ -323,7 +328,6 @@ void GROUND_CMD()
 
   if (vw_have_message())
   {
-    //tmpRSSI = analogRead(RSSI_PIN);
     if (vw_get_message((uint8_t*)buf, &buflen, &tmpRSSI)) // Non-blocking
     { 
       buf[buflen] = '\0';
@@ -332,9 +336,17 @@ void GROUND_CMD()
       logger.echo();
       logger.recordln();
       
-      if (strstr(buf, "CMD GET GPS"))
+      if (strstr(buf, "CMD GET GPS") || strstr(buf, "CMD CUTDOWN"))
       {
         digitalWrite(CMD_RX_EN, HIGH);
+        
+        if (strstr(buf, "CMD CUTDOWN"))
+        {
+          buflen = sprintf(buf, "CUTDOWN COMMAND RECEIVED\n");
+          vw_send((uint8_t *)buf, buflen);
+          vw_wait_tx(); // Wait until the whole message is gone
+          cutdownCMD = true;
+        }
         
         buflen = sprintf(buf, "LAT: %s\n", ftoa(tmpBuf,gps.latitude,6));
         vw_send((uint8_t *)buf, buflen);
@@ -351,11 +363,11 @@ void GROUND_CMD()
         buflen = sprintf(buf, "ALT: %s\n", ftoa(tmpBuf,gps.altitude,2));
         vw_send((uint8_t *)buf, buflen);
         vw_wait_tx(); // Wait until the whole message is gone
-        
-        buflen = sprintf(buf, "RSSI: %d\n", tmpRSSI);
-        vw_send((uint8_t *)buf, buflen);
-        vw_wait_tx(); // Wait until the whole message is gone
       }
+      
+      buflen = sprintf(buf, "RSSI: %d\n", tmpRSSI);
+      vw_send((uint8_t *)buf, buflen);
+      vw_wait_tx(); // Wait until the whole message is gone
     }
   }
 

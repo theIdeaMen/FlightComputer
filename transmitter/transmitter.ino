@@ -20,9 +20,10 @@ const int transmit_pin = 5;
 
 const int RSSI_PIN = 1;
 
-long lastTime = 0;
+boolean cmdReceived = false;
 
-char gps_msg[11] = {'C','M','D',' ','G','E','T',' ','G','P','S'};
+char msg[30];
+
 
 void setup()
 {
@@ -41,18 +42,17 @@ void setup()
   vw_rx_start();       // Start the receiver PLL running
 }
 
-byte count = 1;
+byte count = 0;
 
 void loop()
 {
-  int tmpRSSI;
+  uint16_t tmpRSSI;
   char buf[VW_MAX_MESSAGE_LEN];
   uint8_t buflen = VW_MAX_MESSAGE_LEN;
 
   if (vw_have_message())
   {
-    tmpRSSI = analogRead(RSSI_PIN);
-    if (vw_get_message((uint8_t*)buf, &buflen)) // Non-blocking
+    if (vw_get_message((uint8_t*)buf, &buflen, &tmpRSSI)) // Non-blocking
     { 
       buf[buflen] = '\0';
 
@@ -65,16 +65,30 @@ void loop()
     }
   }
   
-  long timeNow = millis();
-  if (timeNow - lastTime > 5000)
+  if (Serial.available())
+  {
+    msg[count] = Serial.read();
+    count++;
+    if (msg[count-1] == '\n')
+    {
+      msg[count-1] = '/0';
+      cmdReceived = true;
+    }
+    else if (count >= 30)
+    {
+      count = 0;
+    }
+  }
+
+  if (cmdReceived)
   {
     digitalWrite(led_pin, HIGH); // Flash a light to show transmitting
     digitalWrite(receive_en_pin, HIGH);
-    vw_send((uint8_t *)gps_msg, 11);
+    vw_send((uint8_t *)msg, count);
     vw_wait_tx(); // Wait until the whole message is gone
     digitalWrite(led_pin, LOW);
     digitalWrite(receive_en_pin, LOW);
-    count = count + 1;
-    lastTime = timeNow;
+    cmdReceived = false;
+    count = 0;
   }
 }
