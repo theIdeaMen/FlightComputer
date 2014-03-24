@@ -222,7 +222,7 @@ void CUTDOWN_CB()
     logger.echo();
     logger.recordln();
     
-    cutdownCMD = false;
+    Controller.remove(&CUTDOWN_thread); // This thread is no longer needed
   }
 }
 
@@ -342,7 +342,7 @@ void GROUND_CMD()
         
         if (strstr(buf, "CMD CUTDOWN"))
         {
-          buflen = sprintf(buf, "CUTDOWN COMMAND RECEIVED\n");
+          buflen = sprintf(buf, "CUTDOWN RECEIVED\n");
           vw_send((uint8_t *)buf, buflen);
           vw_wait_tx(); // Wait until the whole message is gone
           cutdownCMD = true;
