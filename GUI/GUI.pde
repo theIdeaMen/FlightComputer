@@ -14,7 +14,6 @@ import de.fhpotsdam.unfolding.events.*;
 import de.fhpotsdam.utils.*;
 import de.fhpotsdam.unfolding.providers.*;
 
-
 import controlP5.*;
 import processing.serial.*;
 import org.dishevelled.processing.executor.Executor;
@@ -22,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 ControlP5 cp5;
 Executor executor;
+UnfoldingMap map;
 
 DropdownList drp_comports;
 DropdownList drp_baudrate;
@@ -41,6 +41,9 @@ void setup() {
   executor = new Executor(this, 4);
   
   cp5 = new ControlP5(this);
+  
+  map = new UnfoldingMap(this);
+  MapUtils.createDefaultEventDispatcher(this, map);
   
   // create a DropdownLists
   drp_comports = cp5.addDropdownList("drp_comports")
@@ -79,6 +82,7 @@ void setup() {
 
 void draw() {
   background(128);
+  map.draw();
   
   if (!connected) {
      try { 
@@ -94,7 +98,7 @@ void draw() {
         String response = port.readStringUntil('\n');
         if (response != null) {
           print(response);
-          parseResponse(response);
+          //parseResponse(response);
         }
       }
     } catch (Exception e) {
