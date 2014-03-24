@@ -24,6 +24,7 @@
 
 #include <Wire.h>
 #include <I2Cdev.h>
+#include <VirtualWire.h>
 
 #include <SerialCommand.h>
 
@@ -48,6 +49,9 @@
 #define SPARE_PIN     3
 #define LED_PIN       5
 
+// Transceiver
+#define CMD_RX        17
+#define CMD_TX        16
 #define CMD_RX_EN     34
 #define CMD_TX_EN     35
 #define RSSI_PIN      1    // Analog pin number
@@ -57,10 +61,6 @@ Logger logger;    // Logs to microSD over SPI
 IMU imu;          // Inertial measurement unit - MPU6050 breakout
 GPS gps;          // Global positioning system - Adafruit GPS breakout
 
-// Ground control transceiver
-ArduinoOutStream Xceiver(Serial2);   // Serial connection to the high power transceiver
-SerialCommand GROUND_cmdr(&Serial2); // Command and control from the ground
-
 ArduinoOutStream XBee(Serial3);      // Serial connection to the XBee radio
 SerialCommand XBEE_cmdr(&Serial3);   // Command and control using XBee
 
@@ -68,7 +68,6 @@ SerialCommand XBEE_cmdr(&Serial3);   // Command and control using XBee
 ThreadController Controller = ThreadController();
 Thread IMU_thread = Thread();
 Thread GPS_thread = Thread();
-Thread COMMS_thread = Thread();
 Thread CUTDOWN_thread = Thread();
 Thread RUN_LED_thread = Thread();
 
@@ -93,7 +92,6 @@ void setup()
   digitalWrite(CMD_RX_EN, LOW);
   
   Serial.begin(115200);            // Debug interface
-  Serial2.begin(1200);             // Ground control transceiver
   Serial3.begin(9600);             // XBee interface
 
   logger.initialize(MICROSD_CS, false);
@@ -127,18 +125,20 @@ void setup()
   Controller.add(&CUTDOWN_thread);
   Controller.add(&RUN_LED_thread);
 
-  // Configure ground control commands
+  // Configure XBee control commands
   XBEE_cmdr.addCommand("GET",XBEE_GET_CMD);
   XBEE_cmdr.addCommand("SET",XBEE_SET_CMD);
   XBEE_cmdr.addCommand("?",XBEE_LIST_CMD);
   XBEE_cmdr.addDefaultHandler(XBEE_UNKNOWN_CMD);
   
-  GROUND_cmdr.addCommand("GET",GROUND_GET_CMD);
-  GROUND_cmdr.addCommand("SET",GROUND_SET_CMD);
-  GROUND_cmdr.addCommand("?",GROUND_LIST_CMD);
-  //GROUND_cmdr.addDefaultHandler(GROUND_UNKNOWN_CMD);
-  
-  logger.echoOn = false;
+  // Initialize the IO and ISR for Xceiver
+  vw_set_tx_pin(CMD_TX);
+  vw_set_rx_pin(CMD_RX);
+  vw_set_ptt_pin(CMD_TX_EN);
+  vw_set_ptt_inverted(true);
+  vw_setup(2000);	 // Bits per sec
+
+  vw_rx_start();       // Start the receiver PLL running
 }
 
 void loop()
@@ -146,18 +146,14 @@ void loop()
   // Run threads
   Controller.run();
 
-  // Check for command from ground control
+  // Check for command from Xbee
   XBEE_cmdr.readSerial();
-  //GROUND_cmdr.readSerial();
   
   // Check for GPS data
   gps.update();
   
-  if (Serial2.available())
-  {
-    char c = Serial2.read();
-    Serial.print(c);
-  }
+  // Check for command from Xceiver
+  GROUND_CMD();
 }
 
 
@@ -318,142 +314,48 @@ void XBEE_UNKNOWN_CMD()
   XBee << F("Send \"?\" for a list of commands\n");
 }
 
-////////////
-// GROUND
-void GROUND_GET_CMD()
+
+void GROUND_CMD()
 {
-  char *arg = GROUND_cmdr.next();
-  int tmpRSSI = analogRead(RSSI_PIN);
-  
-  // Enable transmit
-  digitalWrite(CMD_RX_EN, HIGH);
-  digitalWrite(CMD_TX_EN, LOW);
-  delay(8);
+  int tmpRSSI;
+  uint8_t buf[VW_MAX_MESSAGE_LEN];
+  uint8_t buflen = VW_MAX_MESSAGE_LEN;
 
-  // Transmit callsign
-  Xceiver << logger.callSign << endl;
-  
-  if (strcmp(arg, "IMU") == 0)
+  if (vw_have_message())
   {
-    print_imu(Xceiver);
+    tmpRSSI = analogRead(RSSI_PIN);
+    if (vw_get_message(buf, &buflen)) // Non-blocking
+    {
+      Serial.println(&buf);
+      if (strstr(buf, "CMD GET GPS") != null)
+      {
+        digitalWrite(CMD_RX_EN, HIGH);
+        
+        buflen = sprintf(buf, "LAT: %f\n", gps.latitude);
+        vw_send((uint8_t *)buf, buflen);
+        vw_wait_tx(); // Wait until the whole message is gone
+
+        buflen = sprintf(buf, "LON: %f\n", gps.longitude);
+        vw_send((uint8_t *)buf, buflen);
+        vw_wait_tx(); // Wait until the whole message is gone
+        
+        buflen = sprintf(buf, "SPD: %f.2\n", gps.speed);
+        vw_send((uint8_t *)buf, buflen);
+        vw_wait_tx(); // Wait until the whole message is gone
+        
+        buflen = sprintf(buf, "ALT: %f.2\n", gps.altitude);
+        vw_send((uint8_t *)buf, buflen);
+        vw_wait_tx(); // Wait until the whole message is gone
+        
+        buflen = sprintf(buf, "RSSI: %d\n", tmpRSSI);
+        vw_send((uint8_t *)buf, buflen);
+        vw_wait_tx(); // Wait until the whole message is gone
+        
+        digitalWrite(receive_en_pin, LOW);
+      }
+    }
   }
 
-  if (strcmp(arg, "GPS") == 0)
-  {
-    print_gps(Xceiver);
-  }
-
-  if (strcmp(arg, "ECHO") == 0)
-  {
-    Xceiver << "Echo is " << (logger.echoOn ? "on":"off") << endl;
-  }
-
-  if (strcmp(arg, "CLSGN") == 0)
-  {
-    Xceiver << "Call sign is " << logger.callSign << endl;
-  }
-
-  if (strcmp(arg, "TALT") == 0)
-  {
-    Xceiver << "Cutdown altitude is " << logger.topAltitude << endl;
-  }
-  Xceiver << "RSSI: " << tmpRSSI << endl;
-  Xceiver << 0x04;  // EOT
-  
-  // Enable receive
-  digitalWrite(CMD_TX_EN, HIGH);
-  digitalWrite(CMD_RX_EN, LOW);
-}
-
-void GROUND_SET_CMD()
-{
-  char *arg = GROUND_cmdr.next();
-  int tmpRSSI = analogRead(RSSI_PIN);
-  
-  // Enable transmit
-  digitalWrite(CMD_RX_EN, HIGH);
-  digitalWrite(CMD_TX_EN, LOW);
-  delay(8);
-  
-  // Transmit callsign
-  Xceiver << logger.callSign << endl;
-
-  // Set weather the logger should echo to Serial
-  if (strcmp(arg, "ECHO") == 0)
-  {
-    arg = GROUND_cmdr.next();
-  
-    if (strcmp(arg, "OFF") == 0)
-      logger.echoOn = false;
-    else if (strcmp(arg, "ON") == 0)
-      logger.echoOn = true;
-    Xceiver << "Echo is " << (logger.echoOn ? "on":"off") << endl;
-  }
-
-  // Set the call sign for using the high power transceiver
-  if (strcmp(arg, "CLSGN") == 0)
-  {
-    sprintf(logger.callSign, GROUND_cmdr.next());
-    Xceiver << "Call sign is " << logger.callSign << endl;
-  }
-
-  // Set the altitude at which a cutdown will be issued
-  if (strcmp(arg, "TALT") == 0)
-  {
-    logger.topAltitude = atoi(GROUND_cmdr.next());
-    Xceiver << "Cutdown altitude is " << logger.topAltitude << endl;
-  }
-  Xceiver << "RSSI: " << tmpRSSI << endl;
-  Xceiver << 0x04;  // EOT
-  
-  // Enable receive
-  digitalWrite(CMD_TX_EN, HIGH);
-  digitalWrite(CMD_RX_EN, LOW);
-}
-
-void GROUND_LIST_CMD()
-{
-  int tmpRSSI = analogRead(RSSI_PIN);
-  
-  // Enable transmit
-  digitalWrite(CMD_RX_EN, HIGH);
-  digitalWrite(CMD_TX_EN, LOW);
-  delay(8);
-  
-  // Transmit callsign
-  Xceiver << logger.callSign << endl;
-  
-  Xceiver << F("List of commands:\n");
-  Xceiver << F("GET [IMU|GPS|ECHO|CLSGN|TALT]\\r\n");
-  Xceiver << F("SET [ECHO|CLSGN|TALT] {value}\\r\n");
-  Xceiver << F("Please use uppercase\n");
-  Xceiver << "RSSI: " << tmpRSSI << endl;
-  Xceiver << 0x04;  // EOT
-  
-  // Enable receive
-  digitalWrite(CMD_TX_EN, HIGH);
-  digitalWrite(CMD_RX_EN, LOW);
-}
-
-void GROUND_UNKNOWN_CMD()
-{
-  int tmpRSSI = analogRead(RSSI_PIN);
-  
-  // Enable transmit
-  digitalWrite(CMD_RX_EN, HIGH);
-  digitalWrite(CMD_TX_EN, LOW);
-  delay(8);
-  
-  // Transmit callsign
-  Xceiver << logger.callSign << endl;
-  
-  Xceiver << F("Unknown command\n");
-  Xceiver << F("Send \"?\" for a list of commands\n");
-  Xceiver << "RSSI: " << tmpRSSI << endl;
-  Xceiver << 0x04;  // EOT
-  
-  // Enable receive
-  digitalWrite(CMD_TX_EN, HIGH);
   digitalWrite(CMD_RX_EN, LOW);
 }
 
