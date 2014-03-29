@@ -210,8 +210,12 @@ void GPS_CB()
 
 void CUTDOWN_CB()
 {
-  digitalWrite(CUTDOWN_PIN, LOW);
-  if (max_altitude > logger.topAltitude || cutdownCMD)
+  if (digitalRead(CUTDOWN_PIN) == HIGH)
+  {
+    digitalWrite(CUTDOWN_PIN, LOW);
+    Controller.remove(&CUTDOWN_thread); // This thread is no longer needed
+  }
+  else if (max_altitude > logger.topAltitude || cutdownCMD)
   {
     digitalWrite(CUTDOWN_PIN, HIGH);
     
@@ -221,8 +225,6 @@ void CUTDOWN_CB()
     
     logger.echo();
     logger.recordln();
-    
-    Controller.remove(&CUTDOWN_thread); // This thread is no longer needed
   }
 }
 
@@ -332,9 +334,13 @@ void GROUND_CMD()
     { 
       buf[buflen] = '\0';
 
-      logger.append << "COMMS," << millis() << "," << tmpRSSI << "," << buf << endl;
+      logger.append << "COMMS," << millis() << "," << tmpRSSI << "," << buf;
       logger.echo();
       logger.recordln();
+      
+      buflen = sprintf(tmpBuf, "%s-11\n", logger.callSign);
+      vw_send((uint8_t *)tmpBuf, buflen);
+      vw_wait_tx(); // Wait until the whole message is gone
       
       if (strstr(buf, "CMD GET GPS") || strstr(buf, "CMD CUTDOWN"))
       {
